@@ -15,13 +15,13 @@ class Page:
             "https://unpkg.com/htmx.org@1.7.0",
             "https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js",
         ]
-        self.childrens: List[Component] = []
+        self.children: List[Component] = []
         
     def add_child(self, child: Component):
-        self.childrens.append(child)
+        self.children.append(child)
         
-    def add_childrens(self, childrens: List[Component]):
-        self.childrens.extend(childrens)
+    def add_children(self, children: List[Component]):
+        self.children.extend(children)
         
     def render(self) -> str:
         html_template = Template("""
@@ -36,7 +36,7 @@ class Page:
 </head>
 <body>
     <div id="root">
-        {% for child in childrens %}
+        {% for child in children %}
         {{ child }}
         {% endfor %}
     </div>
@@ -44,7 +44,7 @@ class Page:
         return html_template.render({
             "title": self.title, 
             "scripts": self.scripts,
-            "childrens": [child.render() for child in self.childrens],
+            "children": [child.render() for child in self.children],
         })
    
    
