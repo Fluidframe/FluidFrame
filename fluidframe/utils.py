@@ -2,6 +2,8 @@ import hashlib
 import string
 from typing import List
 
+
+
 class FixedLengthIDGenerator:
     def __init__(self, fixed_length=16):
         self.generated_ids = set()
@@ -37,9 +39,6 @@ class FixedLengthIDGenerator:
         return unique_id
     
 
-
-import hashlib
-import string
 
 class UniqueIDGenerator:
     def __init__(self):

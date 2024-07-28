@@ -28,9 +28,9 @@ class State:
   
   
 class RootComponent:
-    def __init__(self, styling_backend: Style) -> None:
+    def __init__(self, css_framework: Style) -> None:
         self.path = "root"
-        self.styling_backend = styling_backend
+        self.css_framework = css_framework
         self.id_generator = UniqueIDGenerator()
     
     def get_id(self, path: List[str]):
@@ -44,14 +44,18 @@ class RootComponent:
 class Component(ABC):
     def __init__(self, parent: Union['Component', RootComponent], key: Optional[str] = None, **kwargs) -> None:
         self.key = key
+        self.root = None
         self.parent = parent
-        self.path: List[str] = []
+        self.root_component = None
         self.type = self.__class__.__name__.lower()
+        
         if isinstance(parent, RootComponent):
-            self.path = [parent.path, self.type]
-        elif isinstance(parent, Component):
-            self.path.extend(parent.path)
-            self.path.append(self.type)
+            self.path = [parent.path] 
+            self.root_component = parent
+        else:
+            self.path = parent.path
+
+        self.path.append(self.type)
         self.id = parent.get_id(self.path) if self.key is None else key
         
         for k, v in kwargs.items():
@@ -117,7 +121,7 @@ class StatefulComponent(Component):
         self.on_change = on_change
        
     def get_route_id(self, path: List[str]) -> str:
-        return self.parent.get_route_id(path)
+        return self.root_component.get_route_id(path)
         
     def set_state(self, new_state: Dict[str, Any]):
         for key, value in new_state.items():

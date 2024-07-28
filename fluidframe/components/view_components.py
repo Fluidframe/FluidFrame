@@ -14,6 +14,7 @@ class Text(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help
+        self.root_component.css_framework
         
     def render(self) -> str:
         template = Template("""<span id="{{ id }}" > {{ text }} </span>""")
