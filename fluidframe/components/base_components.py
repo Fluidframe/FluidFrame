@@ -1,38 +1,71 @@
-from uuid import uuid4
 from jinja2 import Template
 from typing import List, Optional
 from abc import ABC, abstractmethod
 from starlette.routing import Route
 from contextlib import contextmanager
-from typing import Optional, Any, Callable
+from fluidframe.utils import UniqueIDGenerator
 from starlette.templating import Jinja2Templates
+from typing import Optional, Any, Callable, Dict, Tuple, Union
 
+   
+   
+     
+        
+class State:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
-def get_id():
-    return str(uuid4())[-8:]
+    def set_state(self, key, value):
+        setattr(self, key, value)
+        
+    def get_state(self, key, default=None):
+        return getattr(self, key, default)
 
-def get_route(parent_route: Optional[str]="/"):
-    return f"{parent_route}/{get_id()}"
+    def remove_state(self, key):
+        if hasattr(self, key):
+            delattr(self, key)
+  
+  
+  
+class RootComponent:
+    def __init__(self) -> None:
+        self.path = "root"
+        self.id_generator = UniqueIDGenerator()
+    
+    def get_id(self, path: List[str]):
+        return self.id_generator.generate_unique_id(path)
+    
+    def get_route_id(self, path: List[str]):
+        return "/".join(path)
+            
 
 
 class Component(ABC):
-    def __init__(self, name: Optional[str] = None, key: Optional[str] = None) -> None:
-        self.id = get_id()
-        self.state: dict = {}
-        self.route = get_route()
-        self.key = key or self.id
-        self.css_backend: Optional[str] = None
-        self.name = name or self.__class__.__name__.lower()
-
+    def __init__(self, parent: Union['Component', RootComponent], key: Optional[str] = None, **kwargs) -> None:
+        self.key = key
+        self.parent = parent
+        self.path: List[str] = []
+        self.type = self.__class__.__name__.lower()
+        if isinstance(parent, RootComponent):
+            self.path = [parent.path, self.type]
+        elif isinstance(parent, Component):
+            self.path.extend(parent.path)
+            self.path.append(self.type)
+        self.id = parent.get_id(self.path) if self.key is None else key
+        
+        for k, v in kwargs.items():
+            if hasattr(self, k):
+                raise (f"Attribute conflict! attribute `{k}` already exists as part of the component `{self.type}` with id `{self.id}`")
+            setattr(self, k, v)
+        
+    def get_id(self, path: List[str]) -> str:
+        return self.parent.get_id(path)
+    
     @abstractmethod
     def render(self) -> str:
         pass
-
-    def set_state(self, new_state: dict):
-        self.state.update(new_state)
-
-    def get_state(self, key: str, default: Any = None) -> Any:
-        return self.state.get(key, default)
+    
     
     
 class StatelessComponent(Component):
@@ -51,15 +84,16 @@ class StatelessComponent(Component):
     - video
     - diagram
     """
-    def __init__(self, key: Optional[str] = None, content: Any = None) -> None:
-        super().__init__(key)
-        self.content = content
+    def __init__(self, parent: Union['Component', RootComponent], key: Optional[str] = None, **kwargs) -> None:
+        super().__init__(parent, key, **kwargs)
+
 
 
 class StatefulComponent(Component):
-    """For components that need to manage and update their own state.
-    
+    """For components that need to manage and update their own state and respond to user interactions.
+
     - text_input
+    - text_area
     - number_input
     - slider
     - select_box
@@ -70,19 +104,6 @@ class StatefulComponent(Component):
     - time_input
     - file_uploader
     - color_picker
-    """
-    def __init__(self, key: Optional[str] = None, initial_state: dict = None) -> None:
-        super().__init__(key)
-        self.state = initial_state or {}
-
-    @abstractmethod
-    def handle_update(self, new_data: Any) -> None:
-        pass
-
-
-class InteractiveComponent(StatefulComponent):
-    """For components that respond to user interactions and potentially trigger callbacks.
-
     - button
     - download_button
     - form
@@ -90,13 +111,27 @@ class InteractiveComponent(StatefulComponent):
     - spinner
     - status
     """
-    def __init__(self, key: Optional[str] = None, initial_state: dict = None, on_change: Optional[Callable] = None) -> None:
-        super().__init__(key, initial_state)
+    def __init__(self, parent: Union['Component', RootComponent], key: Optional[str] = None, on_change: Optional[Callable] = None, **kwargs) -> None:
+        super().__init__(parent, key, **kwargs)
+        self.state = State()
         self.on_change = on_change
+       
+    def get_route_id(self, path: List[str]) -> str:
+        return self.parent.get_route_id(path)
+        
+    def set_state(self, new_state: Dict[str, Any]):
+        for key, value in new_state.items():
+            self.state.set_state(key, value)
+        if self.on_change:
+            self.on_change(self)
+
+    def get_state(self, key: str, default: Any = None) -> Any:
+        return self.state.get_state(key, default)
 
     @abstractmethod
-    def handle_interaction(self, data: Any) -> None:
+    def handle_update(self, new_data: Any) -> None:
         pass
+    
 
 
 class LayoutComponent(StatelessComponent):
@@ -108,14 +143,16 @@ class LayoutComponent(StatelessComponent):
     - container
     - empty
     """
-    def __init__(self, key: Optional[str] = None, children: List[Component] = None) -> None:
-        super().__init__(key)
+    def __init__(self, parent: Union['Component', RootComponent], key: Optional[str] = None, children: List[Component] = None, **kwargs) -> None:
+        super().__init__(parent, key, **kwargs)
         self.children = children or []
         
     def __enter__(self):
-        pass
+        # Any setup code if needed
+        return self
     
     def __exit__(self, exc_type, exc_value, traceback):
+        # Any teardown code if needed
         pass
 
     def add_child(self, child: Component):
@@ -123,37 +160,22 @@ class LayoutComponent(StatelessComponent):
         
     def get_childrens(self):
         return self.children
-
-    def render(self) -> str:
-        return ''.join(child.render() for child in self.children)
     
+    # StatelessComponent
+    def text(self, body: str, help: Optional[str]=None) -> Component:
+        pass
     
-'''
-class MyClass:
-    _instances = []
-
-    def __init__(self, name=None):
-        self.name = name
-        MyClass._instances.append(self)
-
-    @classmethod
-    def get_instances(cls):
-        return cls._instances
-
-    def __enter__(self):
-        # Clear the list of instances at the start of the context
-        MyClass._instances = []
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        # At the end of the context, you can decide whether to clear the instances or keep them
+    # LayoutComponent
+    def container(self) -> Component:
+        pass
+    
+    # StatefulComponent
+    def button(self, label: str, key: Optional[str]=None, help: Optional[str]=None, on_click: Optional[Callable]=None, args: Optional[Tuple[Any]]=None, kwargs: Optional[Dict[str, Any]]=None, type: str="secondary", disabled: bool=False, use_container_width: bool=False) -> Component:
         pass
 
-    def write(self):
-        instance = MyClass(name="write")
-        return instance
+    
+    def checkbox(self, label: str, value: bool=False, key: Optional[str]=None, help: Optional[str]=None, on_click: Optional[Callable]=None, args: Optional[Tuple[Any]]=None, kwargs: Optional[Dict[str, Any]]=None, type: str="secondary", disabled: bool=False, label_visibility: str="visible") -> Component:
+        pass
+ 
 
-    def text(self):
-        instance = MyClass(name="text")
-        return instance
-'''
+

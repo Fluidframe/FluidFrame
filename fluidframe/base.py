@@ -1,21 +1,10 @@
-from uuid import uuid4
 from jinja2 import Template
 from typing import List, Optional
 from starlette.routing import Route
+from fluidframe.utils import UniqueIDGenerator
 from components.base_components import Component
 from starlette.templating import Jinja2Templates
 
-
-class DynamicRouter:
-    def __init__(self):
-        self.routes = {}
-
-    def add_route(self, component_id, handler):
-        route_path = f"/{component_id}"
-        self.routes[route_path] = Route(route_path, handler)
-
-    def get_routes(self):
-        return list(self.routes.values())
     
 
 class Page:
@@ -46,7 +35,7 @@ class Page:
     {% endfor %}
 </head>
 <body>
-    <div id="main-app-container">
+    <div id="root">
         {% for child in childrens %}
         {{ child }}
         {% endfor %}
