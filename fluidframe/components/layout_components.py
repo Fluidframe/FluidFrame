@@ -41,3 +41,42 @@ class Column(LayoutComponent):
             "children": [child.render() for child in self.children],
         })
     
+    
+class Container(LayoutComponent):
+    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+        super().__init__(parent, key, children, **kwargs)
+        
+    def render(self) -> str:
+        pass
+    
+    
+class SideBar(LayoutComponent):
+    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+        super().__init__(parent, key, children, **kwargs)
+    
+    def render(self) -> str:
+        pass
+    
+
+class Expander(LayoutComponent):
+    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+        super().__init__(parent, key, children, **kwargs)
+        
+    def render(self) -> str:
+        pass
+
+
+class Empty(LayoutComponent):
+    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+        super().__init__(parent, key, children, **kwargs)
+        
+    def render(self) -> str:
+        pass
+        
+
+class NavBar(LayoutComponent):
+    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+        super().__init__(parent, key, children, **kwargs)
+    
+    def render(self) -> str:
+        pass

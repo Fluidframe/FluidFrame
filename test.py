@@ -29,4 +29,3 @@ ff.text("This is a a second sample text")
 print(ff.page.render())
 
 print(text.path)
-
