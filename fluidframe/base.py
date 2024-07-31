@@ -2,7 +2,7 @@ from jinja2 import Template
 from typing import List, Optional
 from starlette.routing import Route
 from fluidframe.utils import UniqueIDGenerator
-from components.base_components import Component
+from fluidframe.components.base_components import Component
 from starlette.templating import Jinja2Templates
 
     

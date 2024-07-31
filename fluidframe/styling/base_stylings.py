@@ -76,7 +76,7 @@ class Style(ABC):
     def flex(self, direction: Optional[str] = None, 
              justify: Optional[str] = None, 
              align: Optional[str] = None, 
-             wrap: Optional[str] = None,
+             wrap: Optional[bool] = None,
              grow: Optional[Union[str, int]] = None,
              shrink: Optional[Union[str, int]] = None,
              basis: Optional[Union[str, int]] = None) -> str:
@@ -84,13 +84,32 @@ class Style(ABC):
         Set flex-related styles.
 
         Args:
-            direction: Flex direction (e.g., 'row', 'column').
-            justify: Justify content (e.g., 'flex-start', 'center', 'space-between').
-            align: Align items (e.g., 'flex-start', 'center', 'stretch').
-            wrap: Flex wrap (e.g., 'nowrap', 'wrap').
-            grow: Flex grow (e.g., 0, 1, '2').
-            shrink: Flex shrink (e.g., 0, 1, '2').
-            basis: Flex basis (e.g., 'auto', '50%', 200).
+        - **`direction`**: Sets the flex direction for the contents of the container.
+            - `row`: Sets the flex direction to row (horizontal layout, which is the default).
+            - `column`: Sets the flex direction to column (vertical layout).
+           
+        - **`justify`**: Controls the alignment of items along the main axis (horizontal by default).
+            - `start`: Aligns items to the start.
+            - `center`: Centers items.
+            - `end`: Aligns items to the end.
+            - `between`: Distributes items evenly, with space between them.
+            - `around`: Distributes items evenly, with space around them.
+            - `evenly`: Distributes items evenly, with equal space around them.
+            
+        - **`align`**: Controls the alignment of items along the cross axis (vertical by default).
+            - `start`: Aligns items to the start.
+            - `center`: Centers items.
+            - `end`: Aligns items to the end.
+            - `baseline`: Aligns items along their baseline.
+            - `stretch`: Stretches items to fill the container.
+                        
+        - **`wrap`**: Controls whether items should wrap onto multiple lines.
+            - `True`: Enables wrapping of items onto multiple lines.
+            - `False`: Prevents items from wrapping (default).
+        
+        - **`grow`**: Flex grow (e.g., 0, 1, '2').
+        - **`shrink`**: Flex shrink (e.g., 0, 1, '2').
+        - **`basis`**: Flex basis (e.g., 'auto', '50%', 200).
 
         Returns:
             A string of CSS classes or inline styles for flex properties.
