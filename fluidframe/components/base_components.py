@@ -5,7 +5,7 @@ from starlette.routing import Route
 from contextlib import contextmanager
 from fluidframe.utils import UniqueIDGenerator
 from starlette.templating import Jinja2Templates
-from fluidframe.styling.base_stylings import Style
+from fluidframe.styling.base_stylings import StyleConfig
 from typing import Optional, Any, Callable, Dict, Tuple, Union
 
    
@@ -28,9 +28,9 @@ class State:
   
   
 class RootComponent:
-    def __init__(self, css_framework: Style) -> None:
+    def __init__(self, style_config: Optional[StyleConfig]=None) -> None:
         self.path = "root"
-        self.css_framework = css_framework
+        self.style_config = style_config
         self.id_generator = UniqueIDGenerator()
     
     def get_id(self, path: List[str]):

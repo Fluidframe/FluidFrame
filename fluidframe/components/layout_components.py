@@ -32,12 +32,9 @@ class Column(LayoutComponent):
             {% endfor %}
         </div>
         """)
-        flex = self.parent.css_framework.flex(direction="column")
-        layout = self.parent.css_framework.layout(width=self.width, height=self.height, padding=4)
-        style_class = self.parent.css_framework.combine_styles(flex, layout)
         return template.render({
             "id": self.id,
-            "style_class": style_class,
+            "style_class": "",
             "children": [child.render() for child in self.children],
         })
     
@@ -71,7 +68,7 @@ class Empty(LayoutComponent):
         super().__init__(parent, key, children, **kwargs)
         
     def render(self) -> str:
-        pass
+        return Template("""<div id="{{ id }}"></div""").render(id=self.id)
         
 
 class NavBar(LayoutComponent):

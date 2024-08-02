@@ -11,6 +11,10 @@ starlette = "^0.38.1"
 jinja2 = "^3.1.4"
 uvicorn = "^0.30.3"
 markdown2 = {extras = ["all"], version = "^2.5.0"}
+markdown-it-py = {extras = ["plugins"], version = "^3.0.0"}
+requests = "^2.32.3"
+pydantic = "^2.8.2"
+beautifulsoup4 = "^4.12.3"
 
 
 [build-system]

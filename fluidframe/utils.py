@@ -1,7 +1,7 @@
-import hashlib
-import string
+import hashlib, re
+import string, json
 from typing import List
-
+from bs4 import BeautifulSoup
 
 
 class FixedLengthIDGenerator:
@@ -72,8 +72,56 @@ class UniqueIDGenerator:
         
         self.generated_ids.add(unique_id)
         return unique_id
+    
+    
+    
+class DotDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(DotDict, self).__init__(*args, **kwargs)
+        for key, value in self.items():
+            if isinstance(value, dict):
+                self[key] = DotDict(value)
 
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError as e:
+            raise AttributeError(f"'DotDict' object has no attribute '{key}'") from e
 
+    def __setattr__(self, key, value):
+        self[key] = value
+
+    def __delattr__(self, key):
+        try:
+            del self[key]
+        except KeyError as e:
+            raise AttributeError(f"'DotDict' object has no attribute '{key}'") from e
+
+    def __dir__(self):
+        return self.keys()
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        if not isinstance(data, dict):
+            return data
+        return cls({key: cls.from_dict(value) if isinstance(value, dict) else value for key, value in data.items()})
+
+    @classmethod
+    def from_json(cls, data: str):
+        return DotDict().from_dict(json.loads(data))
+    
+
+def prettify(html: str) -> str:
+    soup = BeautifulSoup(html, 'html.parser')
+    html_string = soup.prettify()
+    lines = html_string.split('\n')
+    html_string = '\n'.join(' ' * (len(line) - len(line.lstrip())) * 2 + line.lstrip() for line in lines)
+    return re.sub(r'\n\s*\n', '\n\n', html_string)
+
+def save_as_html(file_path, html_string):
+    with open(file_path, 'w') as file:
+        file.write(html_string)
+    print(f"HTML content saved to {file_path}")
 
 
 if __name__=="__main__":
@@ -106,3 +154,26 @@ if __name__=="__main__":
     print(id1)  # Example output: "zshc0mgszl"
     print(id2)  # Example output: "9e6rifu6h0"
     print(id3)  # Example output: "zshc0mgsza" or similar
+    
+    ##########################################################################
+    
+    # Example usage:
+    data = {
+        "name": "Alice",
+        "age": 30,
+        "address": {
+            "city": "Wonderland",
+            "postal_code": "12345"
+        },
+        "preferences": {
+            "color": "blue",
+            "food": "pizza"
+        }
+    }
+    
+    dot_data = DotDict.from_dict(data)
+
+    print(dot_data.name)  # Alice
+    print(dot_data.address.city)  # Wonderland
+    dot_data.address.city = "New Wonderland"
+    print(dot_data.address.city)  # New Wonderland
