@@ -8,8 +8,6 @@ class App:
         pass
 
 
-
-
 class DynamicRouter:
     def __init__(self):
         self.routes = {}

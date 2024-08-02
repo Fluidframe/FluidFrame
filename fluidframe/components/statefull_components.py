@@ -6,13 +6,13 @@ from typing import List, Optional, Union
 from typing import Optional, Any, Callable
 from starlette.templating import Jinja2Templates
 from fluidframe.components.base_components import (
-    StatefulComponent, Component, RootComponent
+    StatefulComponent, Component, Root
 )
 from fluidframe.components.view_components import Text
 
 
 class Button(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -20,7 +20,7 @@ class Button(StatefulComponent):
     
 
 class TextInput(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -28,7 +28,7 @@ class TextInput(StatefulComponent):
     
 
 class TextArea(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -36,7 +36,7 @@ class TextArea(StatefulComponent):
     
 
 class Slider(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -44,7 +44,7 @@ class Slider(StatefulComponent):
     
     
 class SelectBox(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -52,7 +52,7 @@ class SelectBox(StatefulComponent):
     
     
 class MultiSelectBox(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -60,7 +60,7 @@ class MultiSelectBox(StatefulComponent):
     
     
 class CheckBox(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -68,7 +68,7 @@ class CheckBox(StatefulComponent):
     
     
 class Radio(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -76,7 +76,7 @@ class Radio(StatefulComponent):
     
     
 class DateInput(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -84,7 +84,7 @@ class DateInput(StatefulComponent):
     
     
 class TimeInput(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -92,7 +92,7 @@ class TimeInput(StatefulComponent):
     
     
 class FileUploader(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -100,7 +100,7 @@ class FileUploader(StatefulComponent):
     
     
 class ColorPicker(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -108,7 +108,7 @@ class ColorPicker(StatefulComponent):
     
     
 class DownloadButton(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -116,7 +116,7 @@ class DownloadButton(StatefulComponent):
 
 
 class Progress(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -124,7 +124,7 @@ class Progress(StatefulComponent):
     
     
 class Spinner(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -132,7 +132,7 @@ class Spinner(StatefulComponent):
     
 
 class Status(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:
@@ -140,7 +140,7 @@ class Status(StatefulComponent):
     
 
 class Form(StatefulComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, on_change: Callable[..., Any] | None = None, **kwargs) -> None:
         super().__init__(parent, key, on_change, **kwargs)
         
     def render(self) -> str:

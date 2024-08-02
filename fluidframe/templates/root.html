@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% if title %}
+    <title>{{ title }}</title> 
+    {% endif %}
+    
+    {% for link in links %}
+    <link src="{{ link }}">
+    {% endfor %}
+    
+    {% for script in scripts %}
+    <script src="{{ script }}"></script>
+    {% endfor %}
+</head>
+<body class="bg-white dark:bg-gray-900">
+    <div id="root" class="relative">
+        {% for child in children %}
+        {{ child }}
+        {% endfor %}
+    </div>
+</body>

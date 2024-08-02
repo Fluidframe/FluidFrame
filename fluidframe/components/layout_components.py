@@ -6,14 +6,16 @@ from typing import List, Optional, Union
 from typing import Optional, Any, Callable
 from starlette.templating import Jinja2Templates
 from fluidframe.components.base_components import (
-    LayoutComponent, Component, RootComponent
+    LayoutComponent, Component, Root
 )
 from fluidframe.components.view_components import Text
 
 
+TEMPLATE_FILE = "layout_components.html"
+
 
 class Column(LayoutComponent):
-    def __init__(self, parent: Union['Component', RootComponent], width: Union[str, float], height: Union[str, float], vertical_alignment: str="top", children: List[Component] = None) -> None:
+    def __init__(self, parent: Union[Component, Root], width: Union[str, float], height: Union[str, float], vertical_alignment: str="top", children: List[Component] = None) -> None:
         super().__init__(parent, None, children)
         self.width = width
         self.height = height
@@ -40,7 +42,7 @@ class Column(LayoutComponent):
     
     
 class Container(LayoutComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, children: List[Component] = None, **kwargs) -> None:
         super().__init__(parent, key, children, **kwargs)
         
     def render(self) -> str:
@@ -48,7 +50,7 @@ class Container(LayoutComponent):
     
     
 class SideBar(LayoutComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, children: List[Component] = None, **kwargs) -> None:
         super().__init__(parent, key, children, **kwargs)
     
     def render(self) -> str:
@@ -56,7 +58,7 @@ class SideBar(LayoutComponent):
     
 
 class Expander(LayoutComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, children: List[Component] = None, **kwargs) -> None:
         super().__init__(parent, key, children, **kwargs)
         
     def render(self) -> str:
@@ -64,7 +66,7 @@ class Expander(LayoutComponent):
 
 
 class Empty(LayoutComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, children: List[Component] = None, **kwargs) -> None:
         super().__init__(parent, key, children, **kwargs)
         
     def render(self) -> str:
@@ -72,7 +74,7 @@ class Empty(LayoutComponent):
         
 
 class NavBar(LayoutComponent):
-    def __init__(self, parent: Component | RootComponent, key: str | None = None, children: List[Component] = None, **kwargs) -> None:
+    def __init__(self, parent: Union[Component, Root], key: str | None = None, children: List[Component] = None, **kwargs) -> None:
         super().__init__(parent, key, children, **kwargs)
     
     def render(self) -> str:

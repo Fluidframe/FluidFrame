@@ -6,128 +6,82 @@ from typing import Optional, Any, Callable
 from typing import List, Optional, Union, Tuple
 from starlette.templating import Jinja2Templates
 from fluidframe.components.base_components import (
-    StatelessComponent, Component, RootComponent
+    StatelessComponent, Component, Root
 )
 
+
+TEMPLATE_FILE= "view_components.html" 
+
+
 class Text(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None, inline:Optional[bool]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
-        self.inline = inline
         
     def render(self) -> str:
-        template = Template("""
-        <div class="relative">
-            <div id="{{ id }}" class="inline-block">
-                <p class="text-sm text-gray-900 dark:text-white" {% if help %} data-tooltip-target="{{ tooltip_id }}" {% endif %}> {{ body }} </p>
-                {% if help %}
-                <div id="{{ tooltip_id }}" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-                    {{ help }}
-                    <div class="tooltip-arrow" data-popper-arrow></div>
-                </div>
-                {% endif %}
-            </div>
-        </div>""")
-        return template.render({
-            'id': self.id,
-            "body": self.body,
-            "help": self.help,
-            "inline": self.inline,
-            "tooltip_id": f"{self.id}-tooltip",
-        })
+        return self.template.module.text_component(
+            id=self.id,
+            body=self.body,
+            help=self.help,
+            tooltip_id=f"tooltip-{self.id}",
+        )
         
 
 class Title(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
         """
         Args:
             parent (Component|RootComponent): The parent or root component object.
             body (str): The text to be displayed as the title.
             help (Optional[str], optional): If provided a message it will be shown as a tooltip message when hovered over the component.
         """
-        super().__init__(parent)
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
     def render(self) -> str:
-        template = Template("""
-        <div class="relative">
-            <div id="{{ id }}" class="inline-block">
-                <h1 class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white" {% if help %} data-tooltip-target="{{ tooltip_id }}" {% endif %}> {{ body }} </h1>
-                {% if help %}
-                <div id="{{ tooltip_id }}" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-                    {{ help }}
-                    <div class="tooltip-arrow" data-popper-arrow></div>
-                </div>
-                {% endif %}
-            </div>
-        </div>""")
-        return template.render({
-            'id': self.id,
-            "body": self.body,
-            "help": self.help,
-            "tooltip_id": f"{self.id}-tooltip",
-        })
+        return self.template.module.title_component(
+            id=self.id,
+            body=self.body,
+            help=self.help,
+            tooltip_id=f"tooltip-{self.id}",
+        )
                 
  
 class Header(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
     def render(self) -> str:
-        template = Template("""
-        <div class="relative">
-            <div id="{{ id }}" class="inline-block">
-                <h2 class="text-4xl text-gray-900 font-bold dark:text-white" {% if help %} data-tooltip-target="{{ tooltip_id }}" {% endif %}> {{ body }}</h2>
-                {% if help %}
-                <div id="{{ tooltip_id }}" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-                    {{ help }}
-                    <div class="tooltip-arrow" data-popper-arrow></div>
-                </div>
-                {% endif %}
-            </div>
-        </div>""")
-        return template.render({
-            'id': self.id,
-            "body": self.body,
-            "help": self.help,
-            "tooltip_id": f"{self.id}-tooltip",
-        })
+        return self.template.module.header_component(
+            id=self.id,
+            body=self.body,
+            help=self.help,
+            tooltip_id=f"tooltip-{self.id}",
+        )
     
     
 class SubHeader(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
     def render(self) -> str:
-        template = Template("""
-        <div class="relative">
-            <div id="{{ id }}" class="inline-block">
-                <h4 class="text-2xl text-gray-900 font-bold dark:text-white" {% if help %} data-tooltip-target="{{ tooltip_id }}" {% endif %}> {{ body }}</h4>
-                {% if help %}
-                <div id="{{ tooltip_id }}" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-                    {{ help }}
-                    <div class="tooltip-arrow" data-popper-arrow></div>
-                </div>
-                {% endif %}
-            </div>
-        </div>""")
-        return template.render({
-            'id': self.id,
-            "body": self.body,
-            "help": self.help,
-            "tooltip_id": f"{self.id}-tooltip",
-        })
+        return self.template.module.subheader_component(
+            id=self.id,
+            body=self.body,
+            help=self.help,
+            tooltip_id=f"tooltip-{self.id}",
+        )
   
   
 class Image(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], image: str, caption: Optional[str]=None, width: Optional[int]=None, use_column_width: Optional[str]=None, output_format: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], image: str, caption: Optional[str]=None, width: Optional[int]=None, use_column_width: Optional[str]=None, output_format: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.image = image
         self.width = width
         self.caption = caption
@@ -139,8 +93,8 @@ class Image(StatelessComponent):
                  
 
 class Markdown(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
@@ -149,8 +103,8 @@ class Markdown(StatelessComponent):
     
 
 class Latex(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
@@ -159,8 +113,8 @@ class Latex(StatelessComponent):
     
 
 class Code(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
@@ -169,8 +123,8 @@ class Code(StatelessComponent):
 
 
 class Audio(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
@@ -179,8 +133,8 @@ class Audio(StatelessComponent):
     
 
 class Video(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
@@ -189,8 +143,8 @@ class Video(StatelessComponent):
     
 
 class Diagram(StatelessComponent):
-    def __init__(self, parent: Union['Component', RootComponent], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
+        super().__init__(parent, TEMPLATE_FILE)
         self.body = body
         self.help = help
         
