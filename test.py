@@ -8,11 +8,11 @@ from fluidframe.components.layout_components import Column
 
 
 
-
+'''
 class FluidFrame():
     def  __init__(self, title: str) -> None:
         self.pages = []
-        self.root = Root(template_dir="fluidframe/templates", template_path="root.html", title="Sample App")
+        self.root = Root(template_dir="fluidframe/templates", template_path="root.html", title=title)
     
     def text(self, body: str, help: Optional[str]=None) -> Text:
         text = Text(parent=self.root, body=body, help=help)
@@ -58,3 +58,29 @@ html = ff.root.render()
 
 html = prettify(html)
 save_as_html("./tests/index.html", html)
+'''
+
+from fluidframe.tags import div, img, p, h1, html, a
+
+content = div(cls="container", id="container_id", body=[
+    h1(cls="heading", body="This is a heading"),
+    img(src="https://example.com/image.png", alt="An example image", cls="image"),
+    p(body="This is a paragraph with a "),
+    div(body="This is a sample div with a text")
+])
+
+content = prettify(content)
+print(content)
+
+print(50*"=")
+
+content = html(body=[
+    div(cls="container-new", id="container_id", body=[
+        h1(cls="heading", body="This is a heading"),
+        img(src="https://example.com/image.png", alt="An example image", cls="image"),
+        a(cls="link", href="reference-link", body="this is the body")
+    ]),
+])
+
+content = prettify(content)
+print(content)
