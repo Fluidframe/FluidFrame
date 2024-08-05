@@ -1,42 +1,73 @@
-from functools import wraps, lru_cache
-from typing import List, Callable, Optional
+from functools import lru_cache
+from libc.string cimport memcpy
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
+from cpython.string cimport PyString_InternFromString
 
 
-class Element:
-    def __init__(self, tag: str, closing_tag: bool = True):
+__all__ = [
+    'i', 'a', 'b', 'p', 's', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'dd', 'dl', 'dt', 'em', 'li', 'rp', 'rt', 'ol', 'ul', 'td', 'th', 'tr', 'var', 'nav', 'sub', 'sup', 'svg', 'ins',
+    'kbd', 'dfn', 'div', 'del_', 'map_', 'ruby', 'samp', 'slot', 'span', 'html', 'form', 'head', 'abbr', 'main', 'mark', 'math', 'menu', 'body', 'cite', 'code', 'data', 'time_', 'aside',
+    'audio', 'style', 'table', 'tbody', 'video', 'small', 'label', 'meter', 'tfoot', 'thead', 'title', 'hgroup', 'select', 'strong', 'legend', 'option', 'output', 'button', 'canvas', 'dialog',
+    'figure', 'footer', 'header', 'iframe', 'object_', 'section', 'summary', 'caption', 'address', 'article', 'details', 'fieldset', 'colgroup', 'datalist', 'template', 'textarea', 'noscript',
+    'optgroup', 'figcaption', 'blockquote', 'hr', 'br', 'img', 'col', 'wbr', 'area', 'base', 'link', 'meta', 'track', 'embed', 'input_', 'source', 'script', 'menuitem'
+]
+
+
+cdef class Element:
+    cdef str tag
+    cdef bint closing_tag
+    cdef public str end_tag
+    cdef public str starting_tag
+
+    def __init__(self, str tag, bint closing_tag=True):
         self.tag = tag
         self.closing_tag = closing_tag
+        self.end_tag = f"</{tag}>"
+        self.starting_tag = f"<{tag} "
 
-    def __call__(self, **kwargs): 
-        attributes = []
-        body_content = kwargs.pop('body', '')
-        if self.closing_tag and body_content=='':
-            raise ValueError(f"`{self.tag}` requires a parameter `body` with content")
+    def __call__(self, *args, **kwargs):
+        cdef list attributes = []
+        cdef list content_items = []
+        cdef object arg
+        cdef str key, value
+
+        content = kwargs.pop('content', None)
+        if content is not None:
+            if isinstance(content, list):
+                content_items.extend(content)
+            else:
+                content_items.append(content)
+
+        for arg in args:
+            if isinstance(arg, list):
+                content_items.extend(arg)  
+            else: 
+                content_items.append(arg)
+
         for key, value in kwargs.items():
             key = key.replace('_', '-')
             key = 'class' if key == 'cls' else key
-            attributes.append(f'{key}="{value}"')
-        attr_str = ' '.join(attributes)
+            attributes.extend([key, '="', value, '" '])
+
+        attr_str = ''.join(attributes)
+        content_str = ''.join(content_items)
+
         if not self.closing_tag:
-            return f"<{self.tag} {attr_str} />"
-        if isinstance(body_content, list):
-            body_content = ''.join(str(item) for item in body_content)
-        return f"<{self.tag} {attr_str}>{body_content}</{self.tag}>"
-            
+            return ''.join([self.starting_tag, attr_str, ' />'])
+
+        return ''.join([self.starting_tag, attr_str, ">", content_str, self.end_tag])
+
     def __str__(self):
         return self()
 
-def create_element(tag: str, closing_tag: bool=True):
-    element = Element(tag, closing_tag)
-    @lru_cache(maxsize=1000)
-    def element_factory(**kwargs):
-        return element(**kwargs)
+def create_element(str tag, bint closing_tag=True):
+    cdef Element element = Element(tag, closing_tag)
+    def element_factory(*args, **kwargs):
+        return element(*args, **kwargs)
     return element_factory
 
 
-########################
-# Structural HTML Tags #
-########################
+
 i = create_element("i")
 a = create_element("a")
 b = create_element("b")
@@ -102,7 +133,6 @@ tfoot = create_element("tfoot")
 thead = create_element("thead")
 title = create_element("title")
 hgroup = create_element("hroup")
-script = create_element("script")
 select = create_element("select")
 strong = create_element("strong")
 legend = create_element("legend")
@@ -144,22 +174,5 @@ track = create_element("track", closing_tag=False)
 embed = create_element("embed", closing_tag=False)
 input_ = create_element("input", closing_tag=False)
 source = create_element("source", closing_tag=False)
+script = create_element("script", closing_tag=False)
 menuitem = create_element("menuitem", closing_tag=False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

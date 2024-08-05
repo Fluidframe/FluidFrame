@@ -8,80 +8,74 @@ from starlette.templating import Jinja2Templates
 from fluidframe.components.base_components import (
     StatelessComponent, Component, Root
 )
+from fluidframe.utilities.tags import div, p, h1, h2, h4
+# from fluidframe.scripts.utils import add_tooltip
 
-
-TEMPLATE_FILE= "view_components.html" 
 
 
 class Text(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
     def render(self) -> str:
-        return self.template.module.text_component(
-            id=self.id,
-            body=self.body,
-            help=self.help,
-            tooltip_id=f"tooltip-{self.id}",
+        return div(
+            div(
+                p(self.body, cls="text-sm text-gray-900 dark: text-white"), 
+                cls="inline-block"
+            ), id=self.id, cls="relative"
         )
         
 
 class Title(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        """
-        Args:
-            parent (Component|RootComponent): The parent or root component object.
-            body (str): The text to be displayed as the title.
-            help (Optional[str], optional): If provided a message it will be shown as a tooltip message when hovered over the component.
-        """
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
     def render(self) -> str:
-        return self.template.module.title_component(
-            id=self.id,
-            body=self.body,
-            help=self.help,
-            tooltip_id=f"tooltip-{self.id}",
+        return div(
+            div(
+                h1(self.body, cls="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white"),
+                cls="inline-block",
+            ), id=self.id, cls="relative",
         )
                 
  
 class Header(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
     def render(self) -> str:
-        return self.template.module.header_component(
-            id=self.id,
-            body=self.body,
-            help=self.help,
-            tooltip_id=f"tooltip-{self.id}",
+        return div(
+            div(
+                h2(self.body, cls="text-4xl text-gray-900 font-bold dark:text-white") ,
+                cls="inline-block"
+            ), id=self.id, cls="relative",
         )
     
     
 class SubHeader(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
     def render(self) -> str:
-        return self.template.module.subheader_component(
-            id=self.id,
-            body=self.body,
-            help=self.help,
-            tooltip_id=f"tooltip-{self.id}",
+        return div(
+            div(
+                h4(self.body, cls="text-2xl text-gray-900 font-bold dark:text-white"),
+                cls="inline-block",
+            ), id=self.id, cls="relative",
         )
   
   
 class Image(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], image: str, caption: Optional[str]=None, width: Optional[int]=None, use_column_width: Optional[str]=None, output_format: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.image = image
         self.width = width
         self.caption = caption
@@ -94,7 +88,7 @@ class Image(StatelessComponent):
 
 class Markdown(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
@@ -104,7 +98,7 @@ class Markdown(StatelessComponent):
 
 class Latex(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
@@ -114,7 +108,7 @@ class Latex(StatelessComponent):
 
 class Code(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
@@ -124,7 +118,7 @@ class Code(StatelessComponent):
 
 class Audio(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
@@ -134,7 +128,7 @@ class Audio(StatelessComponent):
 
 class Video(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         
@@ -144,7 +138,7 @@ class Video(StatelessComponent):
 
 class Diagram(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent, TEMPLATE_FILE)
+        super().__init__(parent)
         self.body = body
         self.help = help
         

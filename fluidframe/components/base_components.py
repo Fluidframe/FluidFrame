@@ -9,6 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 from starlette.templating import Jinja2Templates
 from fluidframe.styling.base_stylings import StyleConfig
 from typing import Optional, Any, Callable, Dict, Tuple, Union
+from fluidframe.utilities.tags import div, script, link, body, html, head, meta, title
 
    
    
@@ -30,16 +31,13 @@ class State:
   
   
 class Root:
-    def __init__(self, template_dir: str, template_path: str, title: Optional[str]=None, style_config: Optional[StyleConfig]=None) -> None:
+    def __init__(self, title: Optional[str]=None, style_config: Optional[StyleConfig]=None) -> None:
         self.path = "root"
         self.title = title
         self.style_config = style_config
         self.routes: Dict[str, Route] = {}
         self.children: List[Component] = []
         self.id_generator = UniqueIDGenerator()
-        self.template_dir = template_dir or 'templates'
-        self.env = Environment(loader=FileSystemLoader(self.template_dir))
-        self.template = self.env.get_template(template_path)
         
         self.scripts = [
             "https://cdn.tailwindcss.com",
@@ -68,29 +66,28 @@ class Root:
     def get_routes(self) -> Dict[str, Route]:
         return self.routes
     
-    def get_template_env(self) -> Environment:
-        return self.env
-    
     def render(self) -> str:
-        return self.template.render(
-            title=self.title,
-            links=self.links,
-            scripts=self.scripts,
-            children=[child.render() for child in self.children]
-        ) 
+        return "<!DOCTYPE html>" + html(
+            head(
+                title(self.title),
+                meta(charset="UTF-8"),
+                [link(href=lnk) for lnk in self.links],
+                [script(src=src) for src in self.scripts],
+            ),
+            body(
+                div([child.render() for child in self.children], id="root", cls="relative")
+            )
+        )
 
 
 
 class Component(ABC):
-    def __init__(self, parent: Union['Component', Root], template_path: Optional[str]=None, key: Optional[str] = None, **kwargs) -> None:
+    def __init__(self, parent: Union['Component', Root], key: Optional[str] = None, **kwargs) -> None:
         self.key = key
         self.root = None
         self.parent = parent
         self.root_component = None
-        self.env = self.parent.get_template_env()
         self.type = self.__class__.__name__.lower()
-        if template_path:
-            self.template = self.env.get_template(template_path)
         
         if isinstance(parent, Root):
             self.path = [parent.path] 
@@ -131,8 +128,8 @@ class StatelessComponent(Component):
     - video
     - diagram
     """
-    def __init__(self, parent: Union[Component, Root], template_path: Optional[str]=None, key: Optional[str] = None, **kwargs) -> None:
-        super().__init__(parent, template_path, key, **kwargs)
+    def __init__(self, parent: Union[Component, Root], key: Optional[str] = None, **kwargs) -> None:
+        super().__init__(parent, key, **kwargs)
 
 
 
@@ -158,8 +155,8 @@ class StatefulComponent(Component):
     - spinner
     - status
     """
-    def __init__(self, parent: Union[Component, Root], template_path: Optional[str]=None, key: Optional[str] = None, on_change: Optional[Callable] = None, **kwargs) -> None:
-        super().__init__(parent, template_path, key, **kwargs)
+    def __init__(self, parent: Union[Component, Root], key: Optional[str] = None, on_change: Optional[Callable] = None, **kwargs) -> None:
+        super().__init__(parent, key, **kwargs)
         self.state = State()
         self.on_change = on_change
        
@@ -190,8 +187,8 @@ class LayoutComponent(StatelessComponent):
     - container
     - empty
     """
-    def __init__(self, parent: Union[Component, Root], template_path: Optional[str]=None, key: Optional[str] = None, children: List[Component] = None, **kwargs) -> None:
-        super().__init__(parent, template_path, key, **kwargs)
+    def __init__(self, parent: Union[Component, Root], key: Optional[str] = None, children: List[Component] = None, **kwargs) -> None:
+        super().__init__(parent, key, **kwargs)
         self.children = children or []
         
     def __enter__(self):
