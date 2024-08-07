@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
+    "./app.py",
     "./fluidframe/components/**/*.py",
     "./fluidframe/templates/index.html",
   ],
@@ -12,4 +13,3 @@ module.exports = {
   },
   plugins: [],
 }
-

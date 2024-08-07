@@ -1,9 +1,17 @@
 {
-  "devDependencies": {
-    "tailwindcss": "^3.4.7"
+  "name": "static",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build-css": "tailwindcss -i ./fluidframe/static/css/input.css -o ./fluidframe/static/css/dist/output.css"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
   "dependencies": {
-    "htmx.org": "^2.0.1",
-    "prismjs": "^1.29.0"
+    "htmx.org": "^1.9.12",
+    "prismjs": "^1.29.0",
+    "tailwindcss": "^3.4.7"
   }
 }

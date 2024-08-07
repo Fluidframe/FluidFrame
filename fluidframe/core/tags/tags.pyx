@@ -31,7 +31,9 @@ cdef class Element:
         cdef object arg
         cdef str key, value
 
+        i = kwargs.pop('i', None)
         content = kwargs.pop('content', None)
+        content = i or content
         if content is not None:
             if isinstance(content, list):
                 content_items.extend([str(c) for c in content])
@@ -132,6 +134,7 @@ tfoot = create_element("tfoot")
 thead = create_element("thead")
 title = create_element("title")
 hgroup = create_element("hroup")
+script = create_element("script")
 select = create_element("select")
 strong = create_element("strong")
 legend = create_element("legend")
@@ -173,5 +176,4 @@ track = create_element("track", closing_tag=False)
 embed = create_element("embed", closing_tag=False)
 input_ = create_element("input", closing_tag=False)
 source = create_element("source", closing_tag=False)
-script = create_element("script", closing_tag=False)
 menuitem = create_element("menuitem", closing_tag=False)
