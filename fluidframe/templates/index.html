@@ -2,13 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>HTMX Example</title>
-    <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+    <title>{{ title }}</title>
+    {% for script in scrips %}
+    <script src={{ script }}></script>
+    {% endfor %}
+    {% for link in links %}
+    <link href={{ link }}></link>
+    {% endfor %}
+
 </head>
 <body>
-    <button hx-get="/more-content" hx-target="#section1, #section2" hx-swap="outerHTML">Load More</button>
-    
-    <div id="section1">Initial content for section 1</div>
-    <div id="section2">Initial content for section 2</div>
+    <div id="root", cls="relative">
+        {% for child in children %}
+        {{ child }}
+        {% endfor %}
+    </div>
 </body>
 </html>

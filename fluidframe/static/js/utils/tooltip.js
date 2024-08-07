@@ -37,16 +37,25 @@ function positionTooltip(element, tooltip) {
     }
 }
 
-function addTooltip(element, text) {
-    // Add necessary classes
-    element.classList.add('tooltip-trigger');
+function initTooltips() {
+    const triggers = document.querySelectorAll('.tooltip-trigger');
+    
+    triggers.forEach(trigger => {
+        const tooltip = trigger.nextElementSibling;
+        
+        if (tooltip && tooltip.classList.contains('tooltip-content')) {
+            trigger.addEventListener('mouseenter', () => {
+                tooltip.classList.remove('invisible', 'opacity-0');
+                tooltip.classList.add('visible', 'opacity-100');
+                positionTooltip(trigger, tooltip);
+            });
 
-    // Create tooltip content
-    const tooltip = document.createElement('span');
-    tooltip.className = 'tooltip-content';
-    tooltip.textContent = text;
-    element.appendChild(tooltip);
-
-    // Position tooltip on hover
-    element.addEventListener('mouseenter', () => positionTooltip(element, tooltip));
+            trigger.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('visible', 'opacity-100');
+                tooltip.classList.add('invisible', 'opacity-0');
+            });
+        }
+    });
 }
+
+document.addEventListener('DOMContentLoaded', initTooltips);

@@ -3,10 +3,10 @@ from pprint import pprint
 from typing import Optional
 from jinja2 import Template
 from fluidframe.utils import prettify, save_as_html
-from fluidframe.components.base_components import Root
-from fluidframe.components.view_components import Text, Header, SubHeader, Title
-from fluidframe.components.layout_components import Column
-from fluidframe.utilities.tags import div, a, img, h1, p, html, hr, head, header, title, body, script, meta, link
+from fluidframe.core.components import Root
+from fluidframe.components.stateless.layout_components import Column
+from fluidframe.components.stateless.text_components import Text, Header, SubHeader, Title
+from fluidframe.core import div, a, img, h1, p, html, hr, head, header, title, body, script, meta, link
 
 
 

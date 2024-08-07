@@ -34,20 +34,19 @@ cdef class Element:
         content = kwargs.pop('content', None)
         if content is not None:
             if isinstance(content, list):
-                content_items.extend(content)
+                content_items.extend([str(c) for c in content])
             else:
-                content_items.append(content)
+                content_items.append(str(content))
 
         for arg in args:
             if isinstance(arg, list):
-                content_items.extend(arg)  
+                content_items.extend([str(ar) for ar in arg])  
             else: 
-                content_items.append(arg)
+                content_items.append(str(arg))
 
         for key, value in kwargs.items():
-            key = key.replace('_', '-')
             key = 'class' if key == 'cls' else key
-            attributes.extend([key, '="', value, '" '])
+            attributes.extend([key.replace('_', '-'), '="', value, '" '])
 
         attr_str = ''.join(attributes)
         content_str = ''.join(content_items)

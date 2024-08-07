@@ -1,16 +1,13 @@
-import os
 from jinja2 import Template
 from typing import List, Optional
 from abc import ABC, abstractmethod
 from starlette.routing import Route
-from contextlib import contextmanager
 from fluidframe.utils import UniqueIDGenerator
-from jinja2 import Environment, FileSystemLoader
-from starlette.templating import Jinja2Templates
-from fluidframe.styling.base_stylings import StyleConfig
+from fluidframe.core.stylings import StyleConfig
 from typing import Optional, Any, Callable, Dict, Tuple, Union
-from fluidframe.utilities.tags import div, script, link, body, html, head, meta, title
 
+
+ROOT_TEMPLATE = Template("fluidframe/templates/index.html")
    
    
 class State:
@@ -33,8 +30,8 @@ class State:
 class Root:
     def __init__(self, title: Optional[str]=None, style_config: Optional[StyleConfig]=None) -> None:
         self.path = "root"
-        self.title = title
         self.style_config = style_config
+        self.title = title or "FluidFrame"
         self.routes: Dict[str, Route] = {}
         self.children: List[Component] = []
         self.id_generator = UniqueIDGenerator()
@@ -67,16 +64,11 @@ class Root:
         return self.routes
     
     def render(self) -> str:
-        return "<!DOCTYPE html>" + html(
-            head(
-                title(self.title),
-                meta(charset="UTF-8"),
-                [link(href=lnk) for lnk in self.links],
-                [script(src=src) for src in self.scripts],
-            ),
-            body(
-                div([child.render() for child in self.children], id="root", cls="relative")
-            )
+        return ROOT_TEMPLATE.render(
+            title=self.title,
+            links=self.links,
+            scripts=self.scripts,
+            children=self.children
         )
 
 
