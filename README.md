@@ -1,5 +1,8 @@
 # FluidFrame
 
+![FluidFrame Logo](./assets/fluidframe-logo.webp)
+
+
 FluidFrame is a powerful, pythonic web application framework that embraces the simplicity and capability of hypermedia concepts. It combines Python's elegance with HTMX's innovative approach to create dynamic, interactive web applications without the need for complex JavaScript.
 
 ## Key Features

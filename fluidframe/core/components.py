@@ -1,15 +1,13 @@
-from jinja2 import Template
+import os
 from typing import List, Optional
 from abc import ABC, abstractmethod
 from starlette.routing import Route
 from fluidframe.utils import UniqueIDGenerator
 from fluidframe.core.stylings import StyleConfig
 from typing import Optional, Any, Callable, Dict, Tuple, Union
+from fluidframe.core import html, body, meta, script, link, div, head, title
 
 
-ROOT_TEMPLATE = Template("fluidframe/templates/index.html")
-   
-   
 class State:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -37,12 +35,14 @@ class Root:
         self.id_generator = UniqueIDGenerator()
         
         self.scripts = [
-            "https://cdn.tailwindcss.com",
-            "https://unpkg.com/htmx.org@1.7.0",
-            "https://cdn.jsdelivr.net/npm/flowbite@2.4.1/dist/flowbite.min.js",
+            "libs/prismjs/prism.js",
+            "libs/htmx.org/dist/htmx.min.js",
+            "libs/prismjs/components/prism-python.min.js",
+            # "libs/prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js",
         ]
         self.links = [
-            "https://cdn.jsdelivr.net/npm/flowbite@2.4.1/dist/flowbite.min.css"
+            "static/css/dist/output.css",
+            "libs/prismjs/themes/prism-okaidia.min.css",
         ]
         
     def get_id(self, path: List[str]):
@@ -64,12 +64,24 @@ class Root:
         return self.routes
     
     def render(self) -> str:
-        return ROOT_TEMPLATE.render(
-            title=self.title,
-            links=self.links,
-            scripts=self.scripts,
-            children=self.children
-        )
+        return ''.join(["<!DOCTYPE html>",
+            html(lang="eng",
+                i=[
+                    head(
+                        meta(charset="UTF-8"),
+                        title(self.title),
+                        [script(src=s) for s in self.scripts],
+                        [link(href=l, rel="stylesheet") for l in self.links]
+                    ),
+                    body(
+                        div(id="root",
+                            i=[child.render() for child in self.children]
+                        ),
+                        cls="dark:bg-gray-700 bg-gray-400 relative"
+                    )
+                ]
+            )
+        ])
 
 
 

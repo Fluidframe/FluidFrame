@@ -615,6 +615,24 @@ def div(*args, **kwargs) -> str:
     ...
     
 
+def pre(*args, **kwargs) -> str: 
+    """**Generate an HTML <pre> element.**
+
+    The arguments to this function will be used as the content and attributes of the
+    HTML element. Positional arguments will be converted to strings and used as the
+    content of the element. Keyword arguments will be used as the attributes of the
+    element.
+
+    For example, `pre('Hello, world!', id='pre-id', cls='greeting-class')` will generate
+    an HTML element like `<pre id="pre-id" class="greeting-class">Hello, world!<pre>`.
+
+    **Returns:**
+    
+        str: The generated HTML element.
+    """
+    ...
+    
+    
 def del_(*args, **kwargs) -> str: 
     """**Generate an HTML <del_> element.**
 

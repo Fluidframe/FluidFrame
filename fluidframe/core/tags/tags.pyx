@@ -6,7 +6,7 @@ from cpython.string cimport PyString_InternFromString
 
 __all__ = [
     'i', 'a', 'b', 'p', 's', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'dd', 'dl', 'dt', 'em', 'li', 'rp', 'rt', 'ol', 'ul', 'td', 'th', 'tr', 'var', 'nav', 'sub', 'sup', 'svg', 'ins',
-    'kbd', 'dfn', 'div', 'del_', 'map_', 'ruby', 'samp', 'slot', 'span', 'html', 'form', 'head', 'abbr', 'main', 'mark', 'math', 'menu', 'body', 'cite', 'code', 'data', 'time_', 'aside',
+    'kbd', 'dfn', 'div', 'pre', 'del_', 'map_', 'ruby', 'samp', 'slot', 'span', 'html', 'form', 'head', 'abbr', 'main', 'mark', 'math', 'menu', 'body', 'cite', 'code', 'data', 'time_', 'aside',
     'audio', 'style', 'table', 'tbody', 'video', 'small', 'label', 'meter', 'tfoot', 'thead', 'title', 'hgroup', 'select', 'strong', 'legend', 'option', 'output', 'button', 'canvas', 'dialog',
     'figure', 'footer', 'header', 'iframe', 'object_', 'section', 'summary', 'caption', 'address', 'article', 'details', 'fieldset', 'colgroup', 'datalist', 'template', 'textarea', 'noscript',
     'optgroup', 'figcaption', 'blockquote', 'hr', 'br', 'img', 'col', 'wbr', 'area', 'base', 'link', 'meta', 'track', 'embed', 'input_', 'source', 'script', 'menuitem'
@@ -102,6 +102,7 @@ ins = create_element("ins")
 kbd = create_element("kbd")
 dfn = create_element("dfn")
 div = create_element("div")
+pre = create_element("pre")
 del_ = create_element("del")
 map_ = create_element("map")
 ruby = create_element("ruby")
