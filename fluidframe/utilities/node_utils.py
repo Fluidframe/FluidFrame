@@ -26,7 +26,7 @@ def init_project(project_root, library_root):
     """Initialize a new FluidFrame project."""
     # Create a new package.json in the project directory
     run_command("npm init -y", cwd=project_root)
-    
+     
     # Read the library's package.json
     with open(library_root / 'package.json', 'r') as f:
         library_package = json.load(f)

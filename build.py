@@ -19,20 +19,13 @@ def build_tailwind(project_root, library_root):
     run_command(f"npx tailwindcss -c {config_path} -i {input_path} -o {output_path}", cwd=project_root)
 
 def build_cython(library_root):
-    extensions = [
-        Extension(
-            "fluidframe.core.tags.tags",
-            [str(library_root / "fluidframe" / "core" / "tags" / "tags.pyx")],
-            extra_compile_args=["-O3"], extra_link_args=["-O3"]
-        )
-    ]
-    return cythonize(extensions, language_level="3")
+    run_command(f"python {library_root / 'setup.py'} build_ext --inplace", cwd=library_root)
 
 if __name__ == "__main__":
     project_root = Path.cwd()
     library_root = Path(__file__).parent
     # setup_node_environment(library_root)
-    generate_local_tailwind_config(project_root, library_root)
-    build_tailwind(project_root, library_root)
+    # generate_local_tailwind_config(project_root, library_root)
+    # build_tailwind(project_root, library_root)
     build_cython(library_root)
 
