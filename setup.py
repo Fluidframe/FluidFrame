@@ -23,7 +23,12 @@ extensions = [
 setup(
     name='fluidframe',
     version='0.1.0',
-    packages=find_packages(),
+    packages=find_packages(
+        include=[
+            "fluidframe", 
+            "fluidframe.*"
+        ]
+    ),
     cmdclass={
         'build_py': CustomBuild,
     },
@@ -33,11 +38,6 @@ setup(
             'core/tags/*.pyi',
             '../node_modules/**/*',
         ],
-    },
-    entry_points={
-        'console_scripts': [
-            'fluidframe_cli = fluidframe.cli:main'
-        ]
     },
     ext_modules=cythonize(extensions, language_level="3"),
 )

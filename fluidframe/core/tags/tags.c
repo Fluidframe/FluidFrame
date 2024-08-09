@@ -1490,7 +1490,7 @@ static const char *__pyx_filename;
 static const char *__pyx_f[] = {
   "fluidframe/core/tags/tags.pyx",
   "<stringsource>",
-  ".venv/lib/python3.12/site-packages/Cython/Includes/cpython/type.pxd",
+  "type.pxd",
 };
 /* #### Code section: utility_code_proto_before_types ### */
 /* ForceInitThreads.proto */

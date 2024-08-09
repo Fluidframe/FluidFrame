@@ -110,10 +110,10 @@ cd fluidframe
 poetry install
 ```
 
-3. Build the Cython extensions:
+3. Install node packages and initialize:
 
 ```bash
-poetry run python setup.py build_ext --inplace
+poetry run python -m fluidframe_cli --init
 ```
 
 This step compiles the Cython modules and places the resulting binary files in the appropriate directories.

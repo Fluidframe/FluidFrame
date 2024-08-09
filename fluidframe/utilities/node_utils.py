@@ -1,4 +1,4 @@
-import re, ast
+import shutil
 import subprocess, json
 from pathlib import Path
 
@@ -8,11 +8,18 @@ def run_command(command, cwd=None):
     except subprocess.CalledProcessError as e:
         print(f"Error: Command failed with exit code {e.returncode}")
         print(f"Command: {e.cmd}")
+        
+def is_command_available(command):
+    """Check if a command is available in the PATH."""
+    return shutil.which(command) is not None
 
-def setup_node_environment(library_root):
-    """Set up Node environment and install packages in the library folder."""
-    run_command("poetry run nodeenv -p", cwd=library_root)
-    run_command("npm install", cwd=library_root)
+# def setup_node_environment(library_root):
+#     """Set up Node environment and install packages in the library folder."""
+#     if is_command_available('nodeenv'):
+#         print("Setting up Node environment using nodeenv...")
+#         run_command("poetry run nodeenv -p", cwd=library_root)
+#     else:
+#         print("nodeenv not found. Skipping nodeenv setup.")
 
 def check_node_installed():
     """Check if Node.js is installed."""
@@ -21,6 +28,12 @@ def check_node_installed():
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
     return True
+
+def install_node():
+    # TODO: Add automatic installation of nodejs
+    """Install Node.js based on the operating system."""
+    print("Node.js not found. Please install Node.js from `https://nodejs.org/en/download/package-manager`")
+    print("You may need to manually download and install Node.js.")
 
 def init_project(project_root, library_root):
     """Initialize a new FluidFrame project."""
@@ -49,33 +62,3 @@ def init_project(project_root, library_root):
     run_command("npm install", cwd=project_root)
     
     print(f"Initialized a new FluidFrame project in {project_root}")
-
-def install_package(package_name, project_root):
-    """Install a Node.js package in the project's node_modules."""
-    if package_name:
-        run_command(f"npm install {package_name}", cwd=project_root)
-        print(f"Successfully installed {package_name} in the project's node_modules.")
-    else:
-        run_command("npm install", cwd=project_root)
-        print("Successfully installed all dependencies in the project's node_modules.")
-
-def uninstall_package(package_name, project_root):
-    """Uninstall a Node.js package from the project's node_modules."""
-    run_command(f"npm uninstall {package_name}", cwd=project_root)
-    print(f"Successfully uninstalled {package_name} from the project's node_modules.")
-
-def update_package(package_name, project_root):
-    """Update a Node.js package in the project's node_modules."""
-    if package_name:
-        run_command(f"npm update {package_name}", cwd=project_root)
-        print(f"Successfully updated {package_name} in the project's node_modules.")
-    else:
-        run_command("npm update", cwd=project_root)
-        print("Successfully updated all packages in the project's node_modules.")
-
-def run_npm_script(script_name, project_root):
-    """Run an npm script from the project's package.json."""
-    run_command(f"npm run {script_name}", cwd=project_root)
-    print(f"Finished running npm script: {script_name}")
-
-
