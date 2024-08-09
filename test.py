@@ -1,4 +1,4 @@
-import re
+'''import re
 from pprint import pprint
 from typing import Optional
 from fluidframe.core.components import Root
@@ -59,7 +59,7 @@ if __name__=="__main__":
     save_as_html("./tests/index.html", content)
     # print(content)
     
-'''
+
     content = div(content=[
         h1("This is a heading", cls="heading"),
         img(src="https://example.com/image.png", alt="An example image", cls="image"),
@@ -85,3 +85,24 @@ if __name__=="__main__":
     content = prettify(content)
     print(content)
 '''
+
+from fluidframe.utilities.node_utils import extract_tailwind_config
+
+
+
+config_file_path = './tailwind.config.js'
+config_dict = extract_tailwind_config(config_file_path)
+print(config_dict)
+'''
+if config_dict:
+    # Modify the configuration dictionary as needed
+    config_dict['content'].append('./my_project/templates/*.html')
+
+    # Write the updated configuration back to the file
+    with open(config_file_path, 'w') as file:
+        file.write('/** @type {import(\'tailwindcss\').Config} */\n')
+        file.write('module.exports = ')
+        file.write(repr(config_dict))
+        file.write('\n')
+'''
+

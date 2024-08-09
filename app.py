@@ -1,20 +1,25 @@
 import uvicorn
 from typing import Optional
-from build import build_tailwind
-from starlette.routing import Route
+from build import tailwind_watch
 from fluidframe.core.components import Root
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
+from starlette.routing import Route, WebSocketRoute
+from starlette.websockets import WebSocketDisconnect, WebSocketState
 from fluidframe.core import div, head, body, html, button, script, link
 from fluidframe.components.stateless.text_components import Text, Header, SubHeader, Title, Code
+
+
+tailwind_watch()
+
 
 contacts = [
     {"name": "Agent A"},
     {"name": "Agent B"},
     {"name": "Agent C"},
 ]
-build_tailwind()
+
 
 class FluidFrame():
     def  __init__(self, title: str) -> None:
@@ -64,9 +69,9 @@ async def sample(request):
 
     ff.code(body="""import numpy as np
 import fluidframe as ff
-            
+
 def myfunc():
-    return ff.header("This is a fluidframe header").render()""", language="python")
+    return ff.header("This is a fluidframe header").render()""", language="javascript")
 
     return HTMLResponse(ff.root.render())
     
@@ -74,8 +79,8 @@ def myfunc():
 async def homepage(request):
     content = html(
             head(
-                script(src="libs/htmx.org/dist/htmx.min.js"),
-                link(href="static/css/dist/output.css", rel="stylesheet"),
+                script(src="modules/htmx.org/dist/htmx.min.js"),
+                link(href="fluidframe/static/css/dist/output.css", rel="stylesheet"),
             ),
             body(
                 div(
@@ -98,17 +103,26 @@ async def more_content(request):
     return HTMLResponse(''.join(content))
     
 
+async def hot_reload_socket(websocket):
+    await websocket.accept()
+    try:
+        await websocket.send_text('Hello, client!')
+    except WebSocketDisconnect:
+        print('Client connection closed')    
+
+
 app = Starlette(
     debug=True, 
     routes=[
         Route('/', sample),
         Route('/home', homepage),
         Route('/more-content', more_content),
+        WebSocketRoute('/ws', hot_reload_socket),
     ]
 )
 
-app.mount('/libs', StaticFiles(directory='node_modules'), name='libs')
-app.mount('/static', StaticFiles(directory='fluidframe/static'), name='static')
+app.mount('/modules', StaticFiles(directory='node_modules'), name='modules')
+app.mount('/fluidframe/static', StaticFiles(directory='fluidframe/static'), name='lib_static')
 
 if __name__ == '__main__':
     uvicorn.run("app:app", host='127.0.0.1', port=8000, reload=True)

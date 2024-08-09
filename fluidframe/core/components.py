@@ -4,7 +4,9 @@ from abc import ABC, abstractmethod
 from starlette.routing import Route
 from fluidframe.utils import UniqueIDGenerator
 from fluidframe.core.stylings import StyleConfig
+from config import TITLE, SCRIPTS, STYLES, HOT_RELOAD_SCRIPT
 from typing import Optional, Any, Callable, Dict, Tuple, Union
+from fluidframe.utilities import require_scripts, require_styles
 from fluidframe.core import html, body, meta, script, link, div, head, title
 
 
@@ -26,24 +28,14 @@ class State:
   
   
 class Root:
-    def __init__(self, title: Optional[str]=None, style_config: Optional[StyleConfig]=None) -> None:
+    def __init__(self, title: Optional[str]=None, style_config: Optional[StyleConfig]=None, reload: bool=True) -> None:
         self.path = "root"
+        self.reload = reload
+        self.title = title or TITLE
         self.style_config = style_config
-        self.title = title or "FluidFrame"
         self.routes: Dict[str, Route] = {}
         self.children: List[Component] = []
         self.id_generator = UniqueIDGenerator()
-        
-        self.scripts = [
-            "libs/prismjs/prism.js",
-            "libs/htmx.org/dist/htmx.min.js",
-            "libs/prismjs/components/prism-python.min.js",
-            # "libs/prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js",
-        ]
-        self.links = [
-            "static/css/dist/output.css",
-            "libs/prismjs/themes/prism-okaidia.min.css",
-        ]
         
     def get_id(self, path: List[str]):
         return self.id_generator.generate_unique_id(path)
@@ -68,16 +60,17 @@ class Root:
             html(lang="eng",
                 i=[
                     head(
-                        meta(charset="UTF-8"),
                         title(self.title),
-                        [script(src=s) for s in self.scripts],
-                        [link(href=l, rel="stylesheet") for l in self.links]
+                        meta(charset="UTF-8"),
+                        [script(src=s) for s in SCRIPTS],
+                        require_styles(STYLES),
+                        require_scripts(HOT_RELOAD_SCRIPT) if self.reload else "",
                     ),
                     body(
                         div(id="root",
                             i=[child.render() for child in self.children]
                         ),
-                        cls="dark:bg-gray-700 bg-gray-400 relative"
+                        cls="relative dark:bg-gray-800 bg-white"
                     )
                 ]
             )

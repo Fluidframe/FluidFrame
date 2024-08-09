@@ -1,6 +1,6 @@
 from typing import Optional, Union
+from fluidframe.utilities import add_tooltip
 from fluidframe.core import div, p, h1, h2, h4
-from fluidframe.components.stateless.utils import add_tooltip
 from fluidframe.core.components import StatelessComponent, Component, Root
 
 
