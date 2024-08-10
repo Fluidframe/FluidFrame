@@ -2,11 +2,11 @@ import os
 from typing import List, Optional
 from abc import ABC, abstractmethod
 from starlette.routing import Route
+from fluidframe.utilities import requires
 from fluidframe.utils import UniqueIDGenerator
 from fluidframe.core.stylings import StyleConfig
 from config import TITLE, SCRIPTS, STYLES, HOT_RELOAD_SCRIPT
 from typing import Optional, Any, Callable, Dict, Tuple, Union
-from fluidframe.utilities import require_scripts, require_styles
 from fluidframe.core import html, body, meta, script, link, div, head, title
 
 
@@ -36,6 +36,8 @@ class Root:
         self.routes: Dict[str, Route] = {}
         self.children: List[Component] = []
         self.id_generator = UniqueIDGenerator()
+        if self.reload:
+            SCRIPTS.append(HOT_RELOAD_SCRIPT)
         
     def get_id(self, path: List[str]):
         return self.id_generator.generate_unique_id(path)
@@ -63,8 +65,7 @@ class Root:
                         title(self.title),
                         meta(charset="UTF-8"),
                         [script(src=s) for s in SCRIPTS],
-                        require_styles(STYLES),
-                        require_scripts(HOT_RELOAD_SCRIPT) if self.reload else "",
+                        [link(href=stl, rel="stylesheet") for stl in STYLES],
                     ),
                     body(
                         div(id="root",
@@ -82,6 +83,8 @@ class Component(ABC):
     def __init__(self, parent: Union['Component', Root], key: Optional[str] = None, **kwargs) -> None:
         self.key = key
         self.root = None
+        self.styles = []
+        self.scripts = []
         self.parent = parent
         self.root_component = None
         self.type = self.__class__.__name__.lower()

@@ -14,7 +14,7 @@ def build_tailwind(project_root, library_root):
     config_path = project_root / "tailwind.config.js"
     input_path = library_root / "fluidframe" / "static" / "input.css"
     output_path = library_root / "fluidframe" / "static" / "dist" / "output.css"
-    run_command(f"npx tailwindcss -c {config_path} -i {input_path} -o {output_path}", cwd=project_root)
+    run_command(f"npx tailwindcss -c {config_path} -i {input_path} -o {output_path}")
 
 def build_cython(library_root):
     run_command(f"python {library_root / 'setup.py'} build_ext --inplace", cwd=library_root)
