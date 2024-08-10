@@ -1,3 +1,4 @@
+/*
 function positionTooltip(trigger, tooltip) {
     const rect = trigger.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
@@ -55,7 +56,7 @@ function initTooltips() {
 }
 
 document.addEventListener('DOMContentLoaded', initTooltips);
-
+*/
 
 
 const FluidFrameTooltip = (function() {
