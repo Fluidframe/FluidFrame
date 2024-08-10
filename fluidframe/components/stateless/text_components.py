@@ -1,8 +1,8 @@
 from html import escape
 from typing import Optional, Union
 from fluidframe.core.components import StatelessComponent, Component, Root
-from fluidframe.core import div, p, h1, h2, h4, pre, code, span, button, span, img, script
-from fluidframe.utilities import add_tooltip, copy_code, requires
+from fluidframe.core import div, p, h1, h2, h4, pre, code, span, button, span, img
+from fluidframe.utilities import add_tooltip, copy_code, requires, show_tooltip, hide_tooltip
 
 
 
@@ -18,8 +18,8 @@ class Text(StatelessComponent):
             return div(
                 requires(self.scripts),
                 p(self.body, cls="text-sm text-gray-900 dark: text-white"),
-                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
-                id=self.id, cls="relative"
+                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 mx-5 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
+                id=self.id, cls="relative", onmouseenter=show_tooltip(self.id), onmouseleave=hide_tooltip(self.id)
             )
            
         return div(
@@ -40,8 +40,8 @@ class Title(StatelessComponent):
             return div(
                 requires(self.scripts),
                 h1(self.body, cls="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white"),
-                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
-                id=self.id, cls="relative"
+                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 mx-5 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
+                id=self.id, cls="relative", onmouseenter=show_tooltip(self.id), onmouseleave=hide_tooltip(self.id)
             )
            
         return div(
@@ -62,8 +62,8 @@ class Header(StatelessComponent):
             return div(
                 requires(self.scripts),
                 h2(self.body, cls="text-4xl text-gray-900 font-bold dark:text-white"),
-                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
-                id=self.id, cls="relative"
+                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 mx-5 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
+                id=self.id, cls="relative", onmouseenter=show_tooltip(self.id), onmouseleave=hide_tooltip(self.id)
             )
            
         return div(
@@ -84,8 +84,8 @@ class SubHeader(StatelessComponent):
             return div(
                 requires(self.scripts),
                 h4(self.body, cls="text-2xl text-gray-900 font-bold dark:text-white"),
-                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
-                id=self.id, cls="relative"
+                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 mx-5 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
+                id=self.id, cls="relative", onmouseenter=show_tooltip(self.id), onmouseleave=hide_tooltip(self.id)
             )
            
         return div(
