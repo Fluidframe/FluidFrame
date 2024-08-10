@@ -6,7 +6,7 @@ from cpython.string cimport PyString_InternFromString
 
 __all__ = [
     'i', 'a', 'b', 'p', 's', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'dd', 'dl', 'dt', 'em', 'li', 'rp', 'rt', 'ol', 'ul', 'td', 'th', 'tr', 'var', 'nav', 'sub', 'sup', 'svg', 'ins',
-    'kbd', 'dfn', 'div', 'del_', 'map_', 'ruby', 'samp', 'slot', 'span', 'html', 'form', 'head', 'abbr', 'main', 'mark', 'math', 'menu', 'body', 'cite', 'code', 'data', 'time_', 'aside',
+    'kbd', 'dfn', 'div', 'pre', 'del_', 'map_', 'ruby', 'samp', 'slot', 'span', 'html', 'form', 'head', 'abbr', 'main', 'mark', 'math', 'menu', 'body', 'cite', 'code', 'data', 'time_', 'aside',
     'audio', 'style', 'table', 'tbody', 'video', 'small', 'label', 'meter', 'tfoot', 'thead', 'title', 'hgroup', 'select', 'strong', 'legend', 'option', 'output', 'button', 'canvas', 'dialog',
     'figure', 'footer', 'header', 'iframe', 'object_', 'section', 'summary', 'caption', 'address', 'article', 'details', 'fieldset', 'colgroup', 'datalist', 'template', 'textarea', 'noscript',
     'optgroup', 'figcaption', 'blockquote', 'hr', 'br', 'img', 'col', 'wbr', 'area', 'base', 'link', 'meta', 'track', 'embed', 'input_', 'source', 'script', 'menuitem'
@@ -31,23 +31,24 @@ cdef class Element:
         cdef object arg
         cdef str key, value
 
+        i = kwargs.pop('i', None)
         content = kwargs.pop('content', None)
+        content = i or content
         if content is not None:
             if isinstance(content, list):
-                content_items.extend(content)
+                content_items.extend([str(c) for c in content])
             else:
-                content_items.append(content)
+                content_items.append(str(content))
 
         for arg in args:
             if isinstance(arg, list):
-                content_items.extend(arg)  
+                content_items.extend([str(ar) for ar in arg])  
             else: 
-                content_items.append(arg)
+                content_items.append(str(arg))
 
         for key, value in kwargs.items():
-            key = key.replace('_', '-')
             key = 'class' if key == 'cls' else key
-            attributes.extend([key, '="', value, '" '])
+            attributes.extend([key.replace('_', '-'), '="', value, '" '])
 
         attr_str = ''.join(attributes)
         content_str = ''.join(content_items)
@@ -101,6 +102,7 @@ ins = create_element("ins")
 kbd = create_element("kbd")
 dfn = create_element("dfn")
 div = create_element("div")
+pre = create_element("pre")
 del_ = create_element("del")
 map_ = create_element("map")
 ruby = create_element("ruby")
@@ -133,6 +135,7 @@ tfoot = create_element("tfoot")
 thead = create_element("thead")
 title = create_element("title")
 hgroup = create_element("hroup")
+script = create_element("script")
 select = create_element("select")
 strong = create_element("strong")
 legend = create_element("legend")
@@ -174,5 +177,4 @@ track = create_element("track", closing_tag=False)
 embed = create_element("embed", closing_tag=False)
 input_ = create_element("input", closing_tag=False)
 source = create_element("source", closing_tag=False)
-script = create_element("script", closing_tag=False)
 menuitem = create_element("menuitem", closing_tag=False)

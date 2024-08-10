@@ -1,14 +1,11 @@
-import re
+'''import re
 from pprint import pprint
 from typing import Optional
-from jinja2 import Template
+from fluidframe.core.components import Root
 from fluidframe.utils import prettify, save_as_html
-from fluidframe.components.base_components import Root
-from fluidframe.components.view_components import Text, Header, SubHeader, Title
-from fluidframe.components.layout_components import Column
-from fluidframe.utilities.tags import div, a, img, h1, p, html, hr, head, header, title, body, script, meta, link
-
-
+from fluidframe.components.stateless.layout_components import Column
+from fluidframe.components.stateless.text_components import Text, Header, SubHeader, Title, Code
+from fluidframe.core import div, a, img, h1, p, html, hr, head, header, title, body, script, meta, link
 
 
 class FluidFrame():
@@ -36,6 +33,10 @@ class FluidFrame():
         self.root.add_child(subheader)
         return subheader
     
+    def code(self, body: str, language: Optional[str]=None) -> Code:
+        cd = Code(parent=self.root, body=body, language=language)
+        self.root.add_child(cd)
+        return cd
         
 
 if __name__=="__main__":
@@ -56,9 +57,9 @@ if __name__=="__main__":
     content = ff.root.render()
     content = prettify(content)
     save_as_html("./tests/index.html", content)
-    print(content)
+    # print(content)
     
-    
+
     content = div(content=[
         h1("This is a heading", cls="heading"),
         img(src="https://example.com/image.png", alt="An example image", cls="image"),
@@ -83,3 +84,25 @@ if __name__=="__main__":
     )
     content = prettify(content)
     print(content)
+
+
+from fluidframe.utilities.node_utils import extract_tailwind_config
+
+
+
+config_file_path = './tailwind.config.js'
+config_dict = extract_tailwind_config(config_file_path)
+print(config_dict)
+
+if config_dict:
+    # Modify the configuration dictionary as needed
+    config_dict['content'].append('./my_project/templates/*.html')
+
+    # Write the updated configuration back to the file
+    with open(config_file_path, 'w') as file:
+        file.write('/** @type {import(\'tailwindcss\').Config} */\n')
+        file.write('module.exports = ')
+        file.write(repr(config_dict))
+        file.write('\n')
+'''
+

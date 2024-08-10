@@ -1,6 +1,7 @@
 import timeit
 from jinja2 import Template
-from fluidframe.utilities.tags import div
+from fluidframe.core import div
+
 
 def run_jinja():
     template = Template("""
@@ -49,7 +50,7 @@ if __name__=="__main__":
     #################
     # Tags win here # 
     #################
-    iteration = 1000000
+    iteration = 10000
     # Cython implementation of fluidframe tags
     print(f"Average render time for fluidframe tags: {benchmark(run_ff_tags, iteration)} seconds")
 

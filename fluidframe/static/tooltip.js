@@ -1,15 +1,13 @@
-function positionTooltip(element, tooltip) {
-    const rect = element.getBoundingClientRect();
+function positionTooltip(trigger, tooltip) {
+    const rect = trigger.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Reset position
     tooltip.style.top = '';
     tooltip.style.bottom = '';
     tooltip.style.left = '';
     tooltip.style.right = '';
 
-    // Vertical positioning
     if (rect.top > viewportHeight / 2) {
         tooltip.style.bottom = '100%';
         tooltip.style.marginBottom = '5px';
@@ -18,14 +16,12 @@ function positionTooltip(element, tooltip) {
         tooltip.style.marginTop = '5px';
     }
 
-    // Horizontal positioning
     if (rect.left > viewportWidth / 2) {
         tooltip.style.right = '0';
     } else {
         tooltip.style.left = '0';
     }
 
-    // Ensure tooltip is within viewport
     const tooltipRect = tooltip.getBoundingClientRect();
     if (tooltipRect.right > viewportWidth) {
         tooltip.style.right = '0';
@@ -37,16 +33,20 @@ function positionTooltip(element, tooltip) {
     }
 }
 
-function addTooltip(element, text) {
-    // Add necessary classes
-    element.classList.add('tooltip-trigger');
+function showTooltip(parentid, tooltipId) {
+    const trigger = document.getElementById(parentid);
+    const tooltip = document.getElementById(tooltipId);
+    if (tooltip) {
+        tooltip.classList.remove('invisible', 'opacity-0');
+        tooltip.classList.add('visible', 'opacity-100');
+        positionTooltip(trigger, tooltip);
+    }
+}
 
-    // Create tooltip content
-    const tooltip = document.createElement('span');
-    tooltip.className = 'tooltip-content';
-    tooltip.textContent = text;
-    element.appendChild(tooltip);
-
-    // Position tooltip on hover
-    element.addEventListener('mouseenter', () => positionTooltip(element, tooltip));
+function hideTooltip(tooltipId) {
+    const tooltip = document.getElementById(tooltipId);
+    if (tooltip) {
+        tooltip.classList.remove('visible', 'opacity-100');
+        tooltip.classList.add('invisible', 'opacity-0');
+    }
 }

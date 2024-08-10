@@ -1,18 +1,15 @@
 import os
-from jinja2 import Template
 from typing import List, Optional
 from abc import ABC, abstractmethod
 from starlette.routing import Route
-from contextlib import contextmanager
 from fluidframe.utils import UniqueIDGenerator
-from jinja2 import Environment, FileSystemLoader
-from starlette.templating import Jinja2Templates
-from fluidframe.styling.base_stylings import StyleConfig
+from fluidframe.core.dependency import requires
+from fluidframe.core.stylings import StyleConfig
+from config import TITLE, SCRIPTS, STYLES, HOT_RELOAD_SCRIPT
 from typing import Optional, Any, Callable, Dict, Tuple, Union
-from fluidframe.utilities.tags import div, script, link, body, html, head, meta, title
+from fluidframe.core import html, body, meta, script, link, div, head, title
 
-   
-   
+
 class State:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -31,22 +28,16 @@ class State:
   
   
 class Root:
-    def __init__(self, title: Optional[str]=None, style_config: Optional[StyleConfig]=None) -> None:
+    def __init__(self, title: Optional[str]=None, style_config: Optional[StyleConfig]=None, reload: bool=True) -> None:
         self.path = "root"
-        self.title = title
+        self.reload = reload
+        self.title = title or TITLE
         self.style_config = style_config
         self.routes: Dict[str, Route] = {}
         self.children: List[Component] = []
         self.id_generator = UniqueIDGenerator()
-        
-        self.scripts = [
-            "https://cdn.tailwindcss.com",
-            "https://unpkg.com/htmx.org@1.7.0",
-            "https://cdn.jsdelivr.net/npm/flowbite@2.4.1/dist/flowbite.min.js",
-        ]
-        self.links = [
-            "https://cdn.jsdelivr.net/npm/flowbite@2.4.1/dist/flowbite.min.css"
-        ]
+        if self.reload:
+            SCRIPTS.append(HOT_RELOAD_SCRIPT)
         
     def get_id(self, path: List[str]):
         return self.id_generator.generate_unique_id(path)
@@ -67,17 +58,24 @@ class Root:
         return self.routes
     
     def render(self) -> str:
-        return "<!DOCTYPE html>" + html(
-            head(
-                title(self.title),
-                meta(charset="UTF-8"),
-                [link(href=lnk) for lnk in self.links],
-                [script(src=src) for src in self.scripts],
-            ),
-            body(
-                div([child.render() for child in self.children], id="root", cls="relative")
+        return ''.join(["<!DOCTYPE html>",
+            html(lang="eng",
+                i=[
+                    head(
+                        title(self.title),
+                        meta(charset="UTF-8"),
+                        [script(src=s) for s in SCRIPTS],
+                        [link(href=stl, rel="stylesheet") for stl in STYLES],
+                    ),
+                    body(
+                        div(id="root",
+                            i=[child.render() for child in self.children]
+                        ),
+                        cls="relative dark:bg-gray-800 bg-white"
+                    )
+                ]
             )
-        )
+        ])
 
 
 
@@ -85,6 +83,8 @@ class Component(ABC):
     def __init__(self, parent: Union['Component', Root], key: Optional[str] = None, **kwargs) -> None:
         self.key = key
         self.root = None
+        self.styles = []
+        self.scripts = []
         self.parent = parent
         self.root_component = None
         self.type = self.__class__.__name__.lower()

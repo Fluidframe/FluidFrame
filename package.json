@@ -1,0 +1,21 @@
+{
+  "name": "fluidframe",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build-css": "tailwindcss -i ./fluidframe/static/css/input.css -o ./fluidframe/static/css/dist/output.css"
+  },
+  "keywords": [],
+  "author": "Aswanth C Manoj",
+  "license": "ISC",
+  "description": "FluidFrame is a powerful, pythonic web application framework that embraces the simplicity and capability of hypermedia concepts. It combines Python's elegance with HTMX's innovative approach to create dynamic, interactive web applications without the need for complex JavaScript.",
+  "dependencies": {
+    "highlight.js": "^11.10.0",
+    "htmx.org": "^1.9.12",
+    "prismjs": "^1.29.0",
+    "tailwindcss": "^3.4.9"
+  },
+  "directories": {
+    "test": "tests"
+  }
+}

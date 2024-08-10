@@ -1,5 +1,10 @@
 # FluidFrame
 
+<p align="center">
+  <img src="./fluidframe/static/assets/fluidframe-logo.webp" alt="FluidFrame Logo" />
+</p>
+
+
 FluidFrame is a powerful, pythonic web application framework that embraces the simplicity and capability of hypermedia concepts. It combines Python's elegance with HTMX's innovative approach to create dynamic, interactive web applications without the need for complex JavaScript.
 
 ## Key Features
@@ -27,7 +32,7 @@ Pre-built Components: Jump-start your development with a library of pre-built, c
 - **Pre-built Components**: Jump-start your development with a library of pre-built, customizable UI components which are similar to that of `streamlit` so for those who knows it fluidframe becomes a piece of cake **without the full code rerun of streamlit**.
 
 ## Example
-Here's a simple example of a text component in FluidFrame:
+Here's a simple example of a text component in FluidFrame with and without a tooltip:
 ```python
 class Text(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
@@ -36,11 +41,16 @@ class Text(StatelessComponent):
         self.help = help
         
     def render(self) -> str:
+        if self.help:
+            return div(
+                p(self.body, cls="text-sm text-gray-900 dark: text-white"),
+                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
+                id=self.id, cls="relative"
+            )
+           
         return div(
-            div(
-                p(self.body, cls="text-sm text-gray-900 dark:text-white"), 
-                cls="inline-block"
-            ), id=self.id, cls="relative"
+            p(self.body, cls="text-sm text-gray-900 dark: text-white"), 
+            id=self.id, cls="relative"
         )
 ```
 
@@ -90,7 +100,7 @@ Before you begin, ensure you have the following installed on your system:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/fluidframe.git
+git clone https://github.com/AswanthCManoj/fluidframe.git
 cd fluidframe
 ```
 
@@ -100,10 +110,10 @@ cd fluidframe
 poetry install
 ```
 
-3. Build the Cython extensions:
+3. Install node packages and initialize:
 
 ```bash
-poetry run python setup.py build_ext --inplace
+poetry run python -m fluidframe_cli --init
 ```
 
 This step compiles the Cython modules and places the resulting binary files in the appropriate directories.

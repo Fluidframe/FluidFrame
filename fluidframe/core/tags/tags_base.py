@@ -1,10 +1,5 @@
-import re, json
-from collections import OrderedDict
+from typing import Callable
 from fluidframe.utils import prettify
-from functools import lru_cache, wraps
-from html import escape as escape_html
-from jinja2 import Environment, Template
-from typing import Iterator, Union, Optional, Iterable, Any, Callable, List, Dict
 
 
 class Element:
@@ -50,7 +45,7 @@ class Element:
 
 def create_element(tag: str, closing_tag: bool=True) -> Callable:
     element = Element(tag, closing_tag)
-    def element_factory(*args, **kwargs):  # key is a single JSON string
+    def element_factory(*args, **kwargs):
         return element(*args, **kwargs)
     return element_factory
 
@@ -92,6 +87,7 @@ ins = create_element("ins")
 kbd = create_element("kbd")
 dfn = create_element("dfn")
 div = create_element("div")
+pre = create_element("pre")
 del_ = create_element("del")
 map_ = create_element("map")
 ruby = create_element("ruby")
