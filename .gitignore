@@ -296,4 +296,5 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-/tailwind.config.js
+index.html
+tailwind.config.js
