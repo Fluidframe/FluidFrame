@@ -84,7 +84,7 @@ if __name__=="__main__":
     )
     content = prettify(content)
     print(content)
-'''
+
 
 from fluidframe.utilities.node_utils import extract_tailwind_config
 
@@ -93,7 +93,7 @@ from fluidframe.utilities.node_utils import extract_tailwind_config
 config_file_path = './tailwind.config.js'
 config_dict = extract_tailwind_config(config_file_path)
 print(config_dict)
-'''
+
 if config_dict:
     # Modify the configuration dictionary as needed
     config_dict['content'].append('./my_project/templates/*.html')

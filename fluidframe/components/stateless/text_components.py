@@ -1,8 +1,9 @@
 from html import escape
 from typing import Optional, Union
+from fluidframe.core.dependency import requires
 from fluidframe.core.components import StatelessComponent, Component, Root
 from fluidframe.core import div, p, h1, h2, h4, pre, code, span, button, span, img
-from fluidframe.utilities import add_tooltip, copy_code, requires, show_tooltip, hide_tooltip
+from fluidframe.components.utils import add_tooltip, copy_code, show_tooltip, hide_tooltip
 
 
 
