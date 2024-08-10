@@ -38,14 +38,16 @@ class Text(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
         super().__init__(parent)
         self.body = body
-        self.help = help
+        self.help = help 
+        self.scripts=["lib_static/tooltip.js"]
         
     def render(self) -> str:
         if self.help:
             return div(
+                requires(self.scripts),
                 p(self.body, cls="text-sm text-gray-900 dark: text-white"),
-                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
-                id=self.id, cls="relative"
+                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 mx-5 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
+                id=self.id, cls="relative", onmouseenter=show_tooltip(self.id), onmouseleave=hide_tooltip(self.id)
             )
            
         return div(
