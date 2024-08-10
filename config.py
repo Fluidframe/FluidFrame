@@ -12,7 +12,6 @@ STYLES = [
 ]
 
 SCRIPTS = [
-    "lib_static/tooltip.js",
     "modules/htmx.org/dist/htmx.min.js",
     "lib_static/dependency_manager.js",
 ]
