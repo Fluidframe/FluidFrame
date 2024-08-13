@@ -1,7 +1,7 @@
 # FluidFrame
 
 <p align="center">
-  <img src="./fluidframe/static/assets/fluidframe-logo.webp" alt="FluidFrame Logo" />
+  <img src="./fluidframe/public/assets/fluidframe-logo.webp" alt="FluidFrame Logo" />
 </p>
 
 

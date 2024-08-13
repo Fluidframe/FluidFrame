@@ -1,17 +1,17 @@
 import uvicorn, random
 from typing import Optional
-from build import tailwind_watch
 from fluidframe.core.components import Root
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from starlette.routing import Route, WebSocketRoute
+from fluidframe.utilities.tailwind_utils import tailwind_build
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 from fluidframe.core import div, head, body, html, button, script, link, span
 from fluidframe.components.stateless.text_components import Text, Header, SubHeader, Title, Code
 
 
-tailwind_watch()
+tailwind_build()
 
 
 contacts = [
@@ -165,8 +165,13 @@ app = Starlette(
     ]
 )
 
+app.mount('/style', StaticFiles(directory='../fluidpack'), name='style')
 app.mount('/modules', StaticFiles(directory='node_modules'), name='modules')
-app.mount('/lib_static', StaticFiles(directory='fluidframe/static'), name='lib_static')
+app.mount('/lib_static', StaticFiles(directory='../fluidframe/public/scripts'), name='lib_static')
 
 if __name__ == '__main__':
-    uvicorn.run("app:app", host='127.0.0.1', port=8000, reload=True)
+    import os
+    print(os.getcwd())  
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    print(script_dir)
+    # uvicorn.run("app:app", host='127.0.0.1', port=8000, reload=True)

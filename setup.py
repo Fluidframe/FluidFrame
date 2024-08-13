@@ -1,33 +1,20 @@
 import sys
-import subprocess
 from pathlib import Path
 from Cython.Build import cythonize
 from setuptools.command.build_py import build_py
 from setuptools import setup, find_packages, Extension
+from fluidframe.utilities.node_utils import check_node_installed, install_node
 
 sys.dont_write_bytecode = True
 
 class CustomBuild(build_py):
     def run(self):
-        project_root = Path.cwd()
-        library_root = Path(__file__).parent
-        self.build_tailwind(project_root, library_root)
-        
-        build_py.run(self)
-
-    def build_tailwind(self, project_root, library_root):
-        from fluidframe.utilities.tailwind_utils import generate_local_tailwind_config
-        from fluidframe.utilities.node_utils import check_node_installed, install_node
-
         if not check_node_installed():
             install_node()
-        generate_local_tailwind_config(project_root, library_root)
+        print("Build complete inside CustomBuild")
+        build_py.run(self)
         
-        config_path = project_root / "tailwind.config.js"
-        input_path = library_root / "fluidframe" / "static" / "input.css"
-        output_path = library_root / "fluidframe" / "static" / "dist" / "output.css"
-        subprocess.run(f"npx tailwindcss -c {config_path} -i {input_path} -o {output_path}", shell=True, check=True)
-
+ 
 extensions = [
     Extension(
         "fluidframe.core.tags.tags", 
@@ -53,15 +40,18 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    entry_points={
+        'console_scripts': [
+            'fluidframe=fluidframe.cli:main',
+        ],
+    },
     cmdclass={
         'build_py': CustomBuild,
     },
     include_package_data=True,
     package_data={
         'fluidframe': [
-            'core/tags/*.pyi',
-            'static/dist/output.css',
-            '../node_modules/**/*',
+            'core/tags/*.pyi'
         ],
     },
     python_requires='>=3.10',

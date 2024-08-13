@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from fluidframe.utils import DotDict
+from fluidframe.utilities.utils import DotDict
 from typing import List, Dict, Union, Optional, Tuple
 
 

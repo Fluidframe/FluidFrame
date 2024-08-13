@@ -2,10 +2,10 @@ import os
 from typing import List, Optional
 from abc import ABC, abstractmethod
 from starlette.routing import Route
-from fluidframe.utils import UniqueIDGenerator
 from fluidframe.core.dependency import requires
 from fluidframe.core.stylings import StyleConfig
-from config import TITLE, SCRIPTS, STYLES, HOT_RELOAD_SCRIPT
+from fluidframe.utilities.utils import UniqueIDGenerator
+from fluidframe.config import TITLE, SCRIPTS, STYLES, HOT_RELOAD_SCRIPT
 from typing import Optional, Any, Callable, Dict, Tuple, Union
 from fluidframe.core import html, body, meta, script, link, div, head, title
 
