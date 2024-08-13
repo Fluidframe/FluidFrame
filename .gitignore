@@ -298,3 +298,5 @@ dist
 .pnp.*
 index.html
 tailwind.config.js
+src/
+fluidpack/
