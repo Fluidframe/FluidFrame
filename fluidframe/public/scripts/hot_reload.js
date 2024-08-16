@@ -1,3 +1,4 @@
+/*
 (function() {
   // Get the current page's URL
   const pageUrl = new URL(window.location.href);
@@ -62,3 +63,96 @@
     console.error('WebSocket error:', event);
   };
 })();
+
+*/
+class WebSocketManager {
+  constructor(url) {
+    this.socket = null;
+    this.url = this.determineWebSocketURL();
+    this.socket = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+    this.reconnectInterval = 1000; // Start with 1 second
+    this.handlers = {};
+  }
+
+  determineWebSocketURL() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsEndpoint = '/ws';
+
+    // Check for environment-specific overrides
+    if (window.WS_ENDPOINT) {
+      return window.WS_ENDPOINT;
+    }
+
+    // Check for a load balancer endpoint
+    if (window.WS_LOAD_BALANCER) {
+      return `${protocol}//${window.WS_LOAD_BALANCER}${wsEndpoint}`;
+    }
+
+    // Default to the current host
+    return `${protocol}//${host}${wsEndpoint}`;
+  }
+
+  connect() {
+    this.socket = new WebSocket(this.url);
+    this.socket.onopen = this.onOpen.bind(this);
+    this.socket.onclose = this.onClose.bind(this);
+    this.socket.onerror = this.onError.bind(this);
+    this.socket.onmessage = this.onMessage.bind(this);
+  }
+
+  onOpen() {
+    console.log('WebSocket connected');
+    this.reconnectAttempts = 0;
+    this.reconnectInterval = 1000;
+  }
+
+  onClose() {
+    console.log('WebSocket disconnected');
+    this.reconnect();
+  }
+
+  onError(error) {
+    console.error('WebSocket error:', error);
+  }
+
+  onMessage(event) {
+    const data = JSON.parse(event.data);
+    if (this.handlers[data.type]) {
+      this.handlers[data.type](data.payload);
+    }
+  }
+
+  reconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('Max reconnect attempts reached');
+      return;
+    }
+
+    setTimeout(() => {
+      console.log('Attempting to reconnect...');
+      this.connect();
+      this.reconnectAttempts++;
+      this.reconnectInterval *= 2; // Exponential backoff
+    }, this.reconnectInterval);
+  }
+
+  send(type, payload) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ type, payload }));
+    } else {
+      console.error('WebSocket is not open');
+    }
+  }
+
+  addMessageHandler(type, handler) {
+    this.handlers[type] = handler;
+  }
+}
+
+// Usage
+let wsManager = new WebSocketManager();
+wsManager.connect();
+wsManager.send('chat', { message: 'Hello, world!' });

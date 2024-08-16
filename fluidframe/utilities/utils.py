@@ -123,7 +123,6 @@ def save_as_html(file_path, html_string):
         file.write(html_string)
     print(f"HTML content saved to {file_path}")
 
-
 if __name__=="__main__":
     # Example usage
     generator = UniqueIDGenerator()

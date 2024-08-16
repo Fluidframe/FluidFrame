@@ -70,7 +70,7 @@ class Root:
                         div(id="root",
                             i=[child.render() for child in self.children]
                         ),
-                        cls="relative dark:bg-gray-800 bg-white"
+                        cls="relative dark:bg-gray-800 bg-white text-sm text-gray-900 dark: text-white"
                     )
                 ]
             )
