@@ -1,5 +1,5 @@
 from typing import Callable
-from fluidframe.utilities.utils import prettify
+from fluidframe.utils import prettify
 
 
 class Element:

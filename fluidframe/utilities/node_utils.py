@@ -1,8 +1,7 @@
-import shutil, os
+import os
 import subprocess, json
-from pathlib import Path
-from fluidframe.config import FLUIDFRAME_BUILD_DIR, FLUIDFRAME_SCRIPTS_DIR
 from fluidframe.utilities.tailwind_utils import generate_tailwind_config
+from fluidframe.config import FLUIDFRAME_BUILD_DIR, FLUIDFRAME_SCRIPTS_DIR
 
 
 def check_node_installed():
@@ -19,6 +18,26 @@ def install_node():
     print("Node.js not found. Please install Node.js from `https://nodejs.org/en/download/package-manager`")
     print("You may need to manually download and install Node.js.")
 
+def create_fresh_package_json(project_name, fluidframe_dir):
+    """Create a fresh package.json file for the user's project."""
+    package_json = {
+        "name": project_name,
+        "version": "1.0.0",
+        "description": f"A FluidFrame project named {project_name}",
+        "main": "index.js",
+        "scripts": {
+            "test": "echo \"Error: no test specified\" && exit 1"
+        },
+        "keywords": [],
+        "author": "",
+        "license": "ISC",
+        "dependencies": {}
+    }
+    
+    package_json_path = os.path.join(fluidframe_dir, 'package.json')
+    with open(package_json_path, 'w') as f:
+        json.dump(package_json, f, indent=2)
+
 def init_project(args):
     """
     Initializes a FluidFrame project with the given project name.
@@ -29,14 +48,13 @@ def init_project(args):
     Returns:
         None
 
-    Initializes the project directory structure, copies required files, updates package.json,
+    Initializes the project directory structure, creates package.json,
     generates tailwind.config.js, creates input.css, installs dependencies, and builds initial CSS.
     """
     project_name = args.project_name
     current_dir = os.getcwd()
     src_dir = os.path.join(current_dir, FLUIDFRAME_SCRIPTS_DIR)
     fluidframe_dir = os.path.join(current_dir, FLUIDFRAME_BUILD_DIR)
-    utilities_dir = os.path.join(os.path.dirname(__file__), '..', 'utilities')
 
     print(f"Initializing FluidFrame project: {project_name}")
 
@@ -48,19 +66,8 @@ def init_project(args):
     if not os.path.exists(src_dir):
         os.makedirs(src_dir)
 
-    # Copy package.json and package-lock.json from utilities
-    shutil.copy(os.path.join(utilities_dir, 'package.json'), fluidframe_dir)
-    shutil.copy(os.path.join(utilities_dir, 'package-lock.json'), fluidframe_dir)
-
-    # Update package.json with project name
-    package_json_path = os.path.join(fluidframe_dir, 'package.json')
-    with open(package_json_path, 'r') as f:
-        package_data = json.load(f)
-    
-    package_data['name'] = project_name
-    
-    with open(package_json_path, 'w') as f:
-        json.dump(package_data, f, indent=2)
+    # Create fresh package.json for the user's project
+    create_fresh_package_json(project_name, fluidframe_dir)
 
     # Generate tailwind.config.js
     generate_tailwind_config(fluidframe_dir)

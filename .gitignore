@@ -300,3 +300,4 @@ index.html
 tailwind.config.js
 src/
 fluidpack/
+node_modules.json

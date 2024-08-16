@@ -5,8 +5,9 @@ from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from starlette.routing import Route, WebSocketRoute
+from starlette.websockets import WebSocketDisconnect
+from fluidframe.config import MODULES_DIR, STATIC_DIR
 from fluidframe.utilities.tailwind_utils import tailwind_build
-from starlette.websockets import WebSocketDisconnect, WebSocketState
 from fluidframe.core import div, head, body, html, button, script, link, span
 from fluidframe.components.stateless.text_components import Text, Header, SubHeader, Title, Code
 
@@ -72,7 +73,6 @@ import fluidframe as ff
 
 def myfunc():
     return ff.header("This is a fluidframe header").render()""", language="python")
-
     return HTMLResponse(ff.root.render())
     
 
@@ -165,13 +165,14 @@ app = Starlette(
     ]
 )
 
+app.mount(f'/{STATIC_DIR}', StaticFiles(directory='../fluidframe/public'), name=STATIC_DIR)
+app.mount(f'/{MODULES_DIR}', StaticFiles(directory='../fluidframe/node_modules'), name=MODULES_DIR)
 app.mount('/style', StaticFiles(directory='../fluidpack'), name='style')
-app.mount('/modules', StaticFiles(directory='node_modules'), name='modules')
-app.mount('/lib_static', StaticFiles(directory='../fluidframe/public/scripts'), name='lib_static')
-
+# app.mount('/lib_static', StaticFiles(directory='../fluidframe/public/scripts'), name='lib_static')
 if __name__ == '__main__':
     import os
     print(os.getcwd())  
     script_dir = os.path.dirname(os.path.abspath(__file__))
     print(script_dir)
-    # uvicorn.run("app:app", host='127.0.0.1', port=8000, reload=True)
+    uvicorn.run("app:app", host='127.0.0.1', port=8000, reload=True)
+

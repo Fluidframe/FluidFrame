@@ -5,8 +5,8 @@ from starlette.routing import Route
 from fluidframe.core.dependency import requires
 from fluidframe.core.stylings import StyleConfig
 from fluidframe.utilities.utils import UniqueIDGenerator
-from fluidframe.config import TITLE, SCRIPTS, STYLES, HOT_RELOAD_SCRIPT
 from typing import Optional, Any, Callable, Dict, Tuple, Union
+from fluidframe.config import TITLE, SCRIPTS, STYLES, HOT_RELOAD_SCRIPT
 from fluidframe.core import html, body, meta, script, link, div, head, title
 
 
@@ -36,8 +36,6 @@ class Root:
         self.routes: Dict[str, Route] = {}
         self.children: List[Component] = []
         self.id_generator = UniqueIDGenerator()
-        if self.reload:
-            SCRIPTS.append(HOT_RELOAD_SCRIPT)
         
     def get_id(self, path: List[str]):
         return self.id_generator.generate_unique_id(path)
@@ -65,6 +63,7 @@ class Root:
                         title(self.title),
                         meta(charset="UTF-8"),
                         [script(src=s) for s in SCRIPTS],
+                        requires(HOT_RELOAD_SCRIPT) if self.reload else "",
                         [link(href=stl, rel="stylesheet") for stl in STYLES],
                     ),
                     body(

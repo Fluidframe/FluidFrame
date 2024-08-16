@@ -1,7 +1,10 @@
 from html import escape
 from typing import Optional, Union
-from fluidframe.core.dependency import requires
+from fluidframe.public import js_bundle as public_files
+from fluidframe.node_modules import js_bundle as node_modules
+from fluidframe.core.dependency import set_dependancies, requires
 from fluidframe.core.components import StatelessComponent, Component, Root
+from fluidframe.utilities.package_manager import url_for_module, url_for_static
 from fluidframe.core import div, p, h1, h2, h4, pre, code, span, button, span, img
 from fluidframe.components.utils import add_tooltip, copy_code, show_tooltip, hide_tooltip
 
@@ -12,7 +15,7 @@ class Text(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help 
-        self.scripts=["lib_static/tooltip.js"]
+        self.scripts=url_for_static(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -34,7 +37,7 @@ class Title(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help
-        self.scripts=["lib_static/tooltip.js"]
+        self.scripts = url_for_static(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -56,7 +59,7 @@ class Header(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help
-        self.scripts=["lib_static/tooltip.js"]
+        self.scripts=url_for_static(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -78,7 +81,7 @@ class SubHeader(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help
-        self.scripts=["lib_static/tooltip.js"]
+        self.scripts=url_for_static(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -99,10 +102,16 @@ class Code(StatelessComponent):
     def __init__(self, parent: Union[Component, Root], body: str, language: Optional[str]=None) -> None:
         super().__init__(parent)
         self.body = body
-        self.clipboard_image = "lib_static/assets/clipboard.svg"
         self.language = "" if language is None else language.lower()
-        self.styles = ["modules/prismjs/plugins/line-numbers/prism-line-numbers.css", "modules/prismjs/themes/prism-okaidia.min.css"]
-        self.scripts = ["lib_static/copy_code.js", "modules/prismjs/prism.js", "modules/prismjs/plugins/line-numbers/prism-line-numbers.min.js", f"modules/prismjs/components/prism-{language}.min.js"]
+        self.clipboard_image = url_for_static(public_files.assets.clipboard_svg)
+        self.scripts=[
+            url_for_module(node_modules.prismjs.prism_js),
+            url_for_static(public_files.scripts.copy_code_js), 
+            url_for_module(f"prismjs/components/prism-{language}.min.js"),
+        ]
+        self.styles=[
+            url_for_module(node_modules.prismjs.themes.prism_okaidia_min_css),
+        ]
         
     def render(self) -> str:
         return div(id=self.id, cls="max-w-2xl text-gray-400 m-4", i=[
@@ -120,7 +129,7 @@ class Code(StatelessComponent):
                             img(src=self.clipboard_image, cls="filter invert-[30%] brightness-[10%]"), span(pre("Copy"), cls="text-sm pl-2"), 
                         ])
                     ]),
-                    pre(code(escape(self.body), cls=f"line-numbers language-{self.language}")),
+                    pre(code(self.body, cls=f"language-{self.language}")),
                     cls="bg-[#1c1a19] rounded-lg"
                 )
             )
