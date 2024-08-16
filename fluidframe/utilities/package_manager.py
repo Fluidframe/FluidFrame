@@ -1,6 +1,6 @@
 import keyword, json, os, re
 from typing import Dict, Any, List, Optional
-from fluidframe.config import MODULES_DIR, STATIC_DIR
+from fluidframe.config import MODULES_DIR, PUBLIC_DIR
 
 
 def generate_source_map(root_path: str = 'node_modules', output_json: Optional[str] = None, output_py: Optional[str] = None, include_file_types: List[str] = [".js", ".html", ".css", ".svg", ".webp", ".jpeg", ".jpg", ".png"], ignore_exists:bool=True):
@@ -235,8 +235,8 @@ def replace_strings(text: str) -> str:
 def url_for_module(file_path:str) -> str:
     return f"{MODULES_DIR}/{file_path}"
 
-def url_for_static(file_path: str) -> str:
-    return f"{STATIC_DIR}/{file_path}"
+def url_for_public(file_path: str) -> str:
+    return f"{PUBLIC_DIR}/{file_path}"
 
 # if __name__ == "__main__":
 #     # # Or specify custom paths

@@ -2,9 +2,9 @@ from html import escape
 from typing import Optional, Union
 from fluidframe.public import js_bundle as public_files
 from fluidframe.node_modules import js_bundle as node_modules
+from fluidframe.utilities.package_manager import url_for_public
 from fluidframe.core.dependency import set_dependancies, requires
 from fluidframe.core.components import StatelessComponent, Component, Root
-from fluidframe.utilities.package_manager import url_for_module, url_for_static
 from fluidframe.core import div, p, h1, h2, h4, pre, code, span, button, span, img
 from fluidframe.components.utils import add_tooltip, copy_code, show_tooltip, hide_tooltip
 
@@ -15,7 +15,7 @@ class Text(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help 
-        self.scripts=url_for_static(public_files.scripts.tooltip_js)
+        self.scripts=url_for_public(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -37,7 +37,7 @@ class Title(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help
-        self.scripts = url_for_static(public_files.scripts.tooltip_js)
+        self.scripts = url_for_public(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -59,7 +59,7 @@ class Header(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help
-        self.scripts=url_for_static(public_files.scripts.tooltip_js)
+        self.scripts = url_for_public(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -81,7 +81,7 @@ class SubHeader(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.help = help
-        self.scripts=url_for_static(public_files.scripts.tooltip_js)
+        self.scripts = url_for_public(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -103,19 +103,16 @@ class Code(StatelessComponent):
         super().__init__(parent)
         self.body = body
         self.language = "" if language is None else language.lower()
-        self.clipboard_image = url_for_static(public_files.assets.clipboard_svg)
+        self.clipboard_image = url_for_public(public_files.assets.clipboard_svg)
         self.scripts=[
-            url_for_module(node_modules.prismjs.prism_js),
-            url_for_static(public_files.scripts.copy_code_js), 
-            url_for_module(f"prismjs/components/prism-{language}.min.js"),
+            url_for_public(public_files.scripts.copy_code_js),
+            url_for_public(f"scripts/prismjs/prism-{self.language}.bundle.js")
         ]
-        self.styles=[
-            url_for_module(node_modules.prismjs.themes.prism_okaidia_min_css),
-        ]
+        # TODO: Add option to choose between themes
         
     def render(self) -> str:
         return div(id=self.id, cls="max-w-2xl text-gray-400 m-4", i=[
-            requires(self.scripts, self.styles),
+            requires(self.scripts),
             div(cls="rounded-lg shadow-lg", i=
                 div(
                     div(cls="flex items-center justify-between p-2 pb-1", i=[

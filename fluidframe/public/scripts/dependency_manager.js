@@ -8,7 +8,7 @@ let resourceContent = JSON.parse(localStorage.getItem('resourceContent')) || {
   styles: {}
 };
 
-/*
+
 // Set up Intersection Observer
 const dependency_observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -29,7 +29,7 @@ const dependency_observer = new IntersectionObserver((entries) => {
 document.querySelectorAll('[data-dependencies]').forEach(el => {
   dependency_observer.observe(el);
 });
-*/
+
 
 function loadDependencies(dependencies) {
   return new Promise((resolve) => {
