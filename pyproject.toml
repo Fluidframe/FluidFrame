@@ -14,8 +14,8 @@ requests = "^2.32.3"
 beautifulsoup4 = "^4.12.3"
 cython = "^3.0.11"
 setuptools = "^72.1.0"
-markdown = "^3.7"
-js2py = "^0.74"
+markdown-it-py = "^3.0.0"
+mdit-py-plugins = "^0.4.1"
 
 [tool.poetry.build]
 script = "build.py"

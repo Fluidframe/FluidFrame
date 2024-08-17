@@ -76,32 +76,7 @@ import fluidframe as ff
 def myfunc():
     return ff.header("This is a fluidframe header").render()
 """, language="python")
-    ff.text("""<h1>Hi this is a title</h1>
-<p>I just wanted to write this</p>
-<pre><code class="language-python">print("this as a code block")</code></pre>
 
-<p>and</p>
-<pre><code class="language-python">def hello_world():
-    print("Hello, World!")</code></pre>
-
-<h1>h1</h1>
-<h2>h2</h2>
-<h3>h3</h3>
-<h4>h4</h4>
-<h5>h5</h5>
-<h6>h6</h6>
-<ul>
-<li>item 1</li>
-<li>
-<ul>
-<li>item 2<li>
-<li>item 3</li>
-<li>item 4 </li>
-</ul>
-</li>
-</ul>
-
-""")
     return HTMLResponse(ff.root.render())
     
 
@@ -127,4 +102,4 @@ app.mount('/style', StaticFiles(directory=str(script_dir / "fluidpack")), name='
 
 # Do `fluidframe init myproject` first
 if __name__ == '__main__':
-    uvicorn.run("app:app", host='127.0.0.2', port=8000, reload=True)
+    uvicorn.run("app:app", host='127.0.0.1', port=8000, reload=True)

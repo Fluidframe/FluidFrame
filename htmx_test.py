@@ -16,7 +16,7 @@ async def homepage(request):
     content = html(
             head(
                 script(src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.2/htmx.min.js"),
-                link(href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css", rel="stylesheet"),
+                # link(href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css", rel="stylesheet"),
                 """
                 <style>
                     .tooltip {
@@ -64,6 +64,16 @@ async def homepage(request):
                         tooltip.style.top = e.pageY + 10 + 'px';
                     });
                 </script>
+                <h1 id="my-markdown">My Markdown</h1>
+                <p>This is a <strong>bold</strong> text with some <em>italic</em> text.</p>
+                <ul class="contains-task-list">
+                <li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Task 1</li>
+                <li class="task-list-item"><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Task 2</li>
+                </ul>
+                <p>Here's a footnote reference[^1].</p>
+                <pre><code class="language-python">print(&quot;Hello, world!&quot;)
+                </code></pre>
+                <p>:smile:</p>
                 """,
                 cls="dark:bg-gray-700 bg-white dark:text-white flex justify-content h-full w-full"
             )

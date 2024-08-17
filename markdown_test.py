@@ -91,7 +91,7 @@ class MarkdownParser:
 
     def parse_images(self, text):
         return re.sub(r'!\[(.*?)\]\((.*?)\)', r'<img src="\2" alt="\1">', text)
-'''
+
 
 import re
 from html import escape
@@ -186,4 +186,55 @@ Link to google: [Google](https://www.google.com/)
 [Google]: https://www.google.com/
 """
 html_output = parser.parse(markdown_text)
+print(html_output)
+'''
+
+from markdown_it import MarkdownIt
+from mdit_py_plugins.footnote import footnote_plugin
+from mdit_py_plugins.front_matter import front_matter_plugin
+from mdit_py_plugins.anchors import anchors_plugin
+from mdit_py_plugins.tasklists import tasklists_plugin
+
+
+# Initialize MarkdownIt with GitHub Flavored Markdown enabled
+md = MarkdownIt('commonmark', {'linkify': True, 'break': True, 'html': True})
+md = md.use(footnote_plugin).use(front_matter_plugin).use(anchors_plugin).use(tasklists_plugin)
+
+
+# Custom renderer for heading elements
+def render_heading(self, tokens, idx, options, env):
+    # Get the token
+    token = tokens[idx]
+    # Add a custom class to the heading tag
+    level = token.tag  # h1, h2, h3, etc.
+    return f'<{level} class="my-heading-class">{token.content}</{level}>\n'
+
+# Add the custom render rule for headings
+for i in range(1, 7):  # h1 to h6
+    md.add_render_rule(f'heading_open', render_heading)
+
+# Example markdown text
+markdown_text = """
+# My Heading 1
+## My Heading 2
+"""
+
+
+# Parse some markdown text
+markdown_text = """
+# My Markdown
+
+This is a **bold** text with some *italic* text.
+
+- [ ] Task 1
+- [x] Task 2
+
+Here's a footnote reference[^1].
+
+```python
+print("Hello, world!")
+```
+:smile:
+"""
+html_output = md.render(markdown_text)
 print(html_output)

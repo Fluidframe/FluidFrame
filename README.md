@@ -112,28 +112,30 @@ cd fluidframe
 poetry install
 ```
 
-3. Install node packages and initialize:
+**Note: BY default currently its in development mode which creates a `node modules` folder within the libraries folder for development purpose**
+This step also compiles the Cython modules and places the resulting binary files in the appropriate directories.
+
+3. Initialize a project:
 
 ```bash
-poetry run python -m fluidframe_cli --init
+poetry run fluidframe init myproject
 ```
-
-This step compiles the Cython modules and places the resulting binary files in the appropriate directories.
 
 4. Verify the installation:
 ```bash
 poetry shell
 python
-from fluidframe.utilities.cython_tags import div
 
-print(div("This is a test"))
+from fluidframe.core import div
+
+print(div("This is a div tag"))
 ```
 
 If you see "Installation successful!" printed without any errors, the installation is complete.
 
 ---
 
-Component Base Classes in `fluidframe/components/base_components.py`:
+Component Base Classes in `fluidframe/core/components.py`:
 
 ```mermaid
 classDiagram
