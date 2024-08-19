@@ -1,6 +1,5 @@
-from typing import Callable
-from fluidframe.utils import prettify
-
+from typing import Callable, Iterable
+from fluidframe.utilities.helper import prettify
 
 class Element:
     def __init__(self, tag: str, closing_tag: bool = True):
@@ -43,13 +42,69 @@ class Element:
     def __str__(self):
         return self()
 
+'''    
+class Element:
+    def __init__(self, tag: str, closing_tag: bool = True):
+        self.tag = tag
+        self.end_tag = f"</{tag}>"
+        self.starting_tag = f"<{tag} "
+        self.closing_tag = closing_tag
+
+    def __call__(self, *args, **kwargs) -> Iterable[str]:
+        components = [self.starting_tag]
+        
+        inner = kwargs.get('i', None)
+        inner = kwargs.get('body', inner)
+        inner = kwargs.get('inner', inner)
+        inner = kwargs.get('content', inner)
+        
+        # Handle attributes
+        for key, value in kwargs.items():
+            key = key.replace('_', '-')
+            key = 'class' if key == 'cls' else key
+            components.append(f'{key}="{value}" ')
+            
+        if not self.closing_tag:
+            components.append('/>')
+            return components
+        
+        components.append(">")
+        
+        if inner:
+            args = tuple(inner) if isinstance(inner, list) else (inner,)
+            
+        # Handle content (including nested elements)
+        for arg in args:
+            if isinstance(arg, list):
+                for item in self.flatten(arg):
+                    components.append(item)
+            else:
+                if isinstance(arg, Element):
+                    components.extend(arg())
+                else:
+                    components.append(arg)
+                    
+        components.append(self.end_tag)
+        
+        return components
+
+    def flatten(self, items):
+        """Recursively flattens a list of items."""
+        for item in items:
+            if isinstance(item, list):
+                yield from self.flatten(item)
+            else:
+                yield item
+'''
+
 def create_element(tag: str, closing_tag: bool=True) -> Callable:
     element = Element(tag, closing_tag)
     def element_factory(*args, **kwargs):
         return element(*args, **kwargs)
     return element_factory
 
-
+def render(html: list) -> str:
+    return ''.join(html)
 
 ########################
 # Structural HTML Tags #

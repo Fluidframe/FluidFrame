@@ -1,6 +1,7 @@
 import os
 import subprocess
 import importlib.util
+from fluidframe import get_lib_path
 from fluidframe.config import FLUIDFRAME_BUILD_DIR
 
 
@@ -59,7 +60,7 @@ def generate_tailwind_config(fluidframe_dir):
     The function generates a tailwind.config.js file in the specified FluidFrame project directory.
     It includes the library files and user project files in the content section of the configuration.
     """
-    package_path = get_package_path()
+    package_path = get_lib_path()
     
     library_files = [
         os.path.join(package_path, "components", "**", "*.py"),

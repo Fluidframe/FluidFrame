@@ -1,6 +1,7 @@
 import uvicorn, random
 from pathlib import Path
 from typing import Optional
+from fluidframe import get_lib_path
 from fluidframe.core.components import Root
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
@@ -8,20 +9,13 @@ from starlette.staticfiles import StaticFiles
 from starlette.routing import Route, WebSocketRoute
 from starlette.websockets import WebSocketDisconnect
 from fluidframe.config import MODULES_DIR, PUBLIC_DIR
+from fluidframe.utilities.helper import save_as_html
 from fluidframe.utilities.tailwind_utils import tailwind_build
 from fluidframe.core import div, head, body, html, button, script, link, span
-from fluidframe.components.stateless.text_components import Text, Header, SubHeader, Title, Code
+from fluidframe.components.stateless.text_components import Text, Header, SubHeader, Title, Code, Markdown
 
 
 tailwind_build()
-script_dir = Path(__file__).resolve().parent
-
-
-contacts = [
-    {"name": "Agent A"},
-    {"name": "Agent B"},
-    {"name": "Agent C"},
-]
 
 
 class FluidFrame():
@@ -54,6 +48,11 @@ class FluidFrame():
         self.root.add_child(cd)
         return cd
     
+    def markdown(self, body: str, help: Optional[str]=None) -> Markdown:
+        md = Markdown(parent=self.root, body=body, help=help)
+        self.root.add_child(md)
+        return md
+    
 
 async def sample(request):
     ff = FluidFrame(title="Sample page")
@@ -76,6 +75,24 @@ import fluidframe as ff
 def myfunc():
     return ff.header("This is a fluidframe header").render()
 """, language="python")
+    
+    ff.markdown("""# Title 1
+## Title 2
+### Title 3
+
+- list 1
+* list 2
+- list 3
+
+>> Highlighetd
+
+```python
+def show_code():
+    return "code_shown"
+```
+""")
+    
+    save_as_html("index.html", ff.root.render())
 
     return HTMLResponse(ff.root.render())
     
@@ -96,9 +113,12 @@ app = Starlette(
     ]
 )
 
-app.mount(f'/{PUBLIC_DIR}', StaticFiles(directory=str(script_dir / "fluidframe/public")), name=PUBLIC_DIR)
-app.mount(f'/{MODULES_DIR}', StaticFiles(directory=str(script_dir / "fluidframe/node_modules")), name=MODULES_DIR)
-app.mount('/style', StaticFiles(directory=str(script_dir / "fluidpack")), name='style')
+lib_dir = get_lib_path()
+fluidpack_dir = Path(__file__).resolve().parent / "fluidpack"
+
+app.mount(f'/{PUBLIC_DIR}', StaticFiles(directory=str(lib_dir / "public")), name=PUBLIC_DIR)
+app.mount(f'/{MODULES_DIR}', StaticFiles(directory=str(lib_dir / "node_modules")), name=MODULES_DIR)
+app.mount('/style', StaticFiles(directory=str(fluidpack_dir)), name='style')
 
 # Do `fluidframe init myproject` first
 if __name__ == '__main__':

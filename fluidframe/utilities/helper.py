@@ -2,6 +2,34 @@ import hashlib, re
 import string, json
 from typing import List
 from bs4 import BeautifulSoup
+from markdown_it import MarkdownIt
+from mdit_py_plugins.anchors import anchors_plugin
+from mdit_py_plugins.footnote import footnote_plugin
+from mdit_py_plugins.tasklists import tasklists_plugin
+from mdit_py_plugins.front_matter import front_matter_plugin
+
+
+
+MARKDOWNER = None
+
+def markdown_to_html(markdown_text: str) -> str:
+    global MARKDOWNER
+    if MARKDOWNER is None:
+        MARKDOWNER = MarkdownIt('commonmark', {'linkify': True, 'break': True, 'html': True})
+        MARKDOWNER = MARKDOWNER.use(footnote_plugin).use(front_matter_plugin).use(anchors_plugin).use(tasklists_plugin).enable('table')
+    return MARKDOWNER.render(markdown_text)
+
+def prettify(html: str) -> str:
+    soup = BeautifulSoup(html, 'html.parser')
+    html_string = soup.prettify()
+    lines = html_string.split('\n')
+    html_string = '\n'.join(' ' * (len(line) - len(line.lstrip())) * 2 + line.lstrip() for line in lines)
+    return re.sub(r'\n\s*\n', '\n\n', html_string)
+
+def save_as_html(file_path, html_string):
+    with open(file_path, 'w') as file:
+        file.write(html_string)
+    print(f"HTML content saved to {file_path}")
 
 
 class FixedLengthIDGenerator:
@@ -61,15 +89,17 @@ class UniqueIDGenerator:
         return self.base_encode(hash_code, self.base_chars)[:length]
     
     def generate_unique_id(self, component_path):
-        base_codes = [self.generate_base_code(name) for name in component_path]
-        base_id = '-'.join(base_codes)
-        unique_id = base_id
+        if len(component_path)==1:
+            unique_id=component_path[0]
+        else:
+            base_codes = [self.generate_base_code(name) for name in component_path]
+            base_id = '-'.join(base_codes)
+            unique_id = f'{base_id}-{component_path[-1]}'
         extra_index = 0
         while unique_id in self.generated_ids:
             extra_code = self.base_encode(extra_index, self.base_chars)
             unique_id = f"{base_id}-{extra_code}"
             extra_index += 1
-        
         self.generated_ids.add(unique_id)
         return unique_id
     
@@ -109,19 +139,8 @@ class DotDict(dict):
     @classmethod
     def from_json(cls, data: str):
         return DotDict().from_dict(json.loads(data))
-    
-
-def prettify(html: str) -> str:
-    soup = BeautifulSoup(html, 'html.parser')
-    html_string = soup.prettify()
-    lines = html_string.split('\n')
-    html_string = '\n'.join(' ' * (len(line) - len(line.lstrip())) * 2 + line.lstrip() for line in lines)
-    return re.sub(r'\n\s*\n', '\n\n', html_string)
-
-def save_as_html(file_path, html_string):
-    with open(file_path, 'w') as file:
-        file.write(html_string)
-    print(f"HTML content saved to {file_path}")
+   
+   
 
 if __name__=="__main__":
     # Example usage

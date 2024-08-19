@@ -29,8 +29,8 @@ class CustomBuild(build_py):
         except subprocess.CalledProcessError as e:
             print(f"Error installing FluidFrame dependencies: {e}")
         os.chdir(current_dir)
-        
- 
+
+
 extensions = [
     Extension(
         "fluidframe.core.tags.tags", 
