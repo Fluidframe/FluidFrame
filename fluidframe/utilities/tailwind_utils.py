@@ -1,7 +1,7 @@
 import os
 import subprocess
 import importlib.util
-from fluidframe import get_lib_path
+from fluidframe.utils import get_lib_path
 from fluidframe.config import FLUIDFRAME_BUILD_DIR
 
 

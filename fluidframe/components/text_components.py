@@ -1,19 +1,19 @@
 from html import escape
 from typing import Optional, Union
-from fluidframe.utilities.helper import markdown_to_html
+from fluidframe import Component
 from fluidframe.public import js_bundle as public_files
+from fluidframe.utilities.helper import markdown_to_html
 from fluidframe.node_modules import js_bundle as node_modules
 from fluidframe.utilities.package_manager import url_for_public
 from fluidframe.core.dependency import set_dependancies, requires
-from fluidframe.core.components import StatelessComponent, Component, Root
 from fluidframe.core import div, p, h1, h2, h4, pre, code, span, button, span, img
 from fluidframe.components.utils import add_tooltip, copy_code, show_tooltip, hide_tooltip
 
 
 
-class Text(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+class Text(Component):
+    def __init__(self, body: str, help: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.help = help 
         self.scripts=url_for_public(public_files.scripts.tooltip_js)
@@ -32,9 +32,9 @@ class Text(StatelessComponent):
         )
         
 
-class Title(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+class Title(Component):
+    def __init__(self, body: str, help: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.help = help
         self.scripts = url_for_public(public_files.scripts.tooltip_js)
@@ -53,9 +53,9 @@ class Title(StatelessComponent):
         )
                 
  
-class Header(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+class Header(Component):
+    def __init__(self, body: str, help: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.help = help
         self.scripts = url_for_public(public_files.scripts.tooltip_js)
@@ -74,9 +74,9 @@ class Header(StatelessComponent):
         )
     
     
-class SubHeader(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+class SubHeader(Component):
+    def __init__(self, body: str, help: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.help = help
         self.scripts = url_for_public(public_files.scripts.tooltip_js)
@@ -95,9 +95,9 @@ class SubHeader(StatelessComponent):
         )
         
 
-class Code(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, language: Optional[str]=None) -> None:
-        super().__init__(parent)
+class Code(Component):
+    def __init__(self, body: str, language: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.language = "" if language is None else language.lower()
         self.clipboard_image = url_for_public(public_files.assets.clipboard_svg)
@@ -130,9 +130,9 @@ class Code(StatelessComponent):
         ])
                  
 
-class Markdown(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+class Markdown(Component):
+    def __init__(self, body: str, help: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.help = help
         
@@ -149,9 +149,9 @@ class Markdown(StatelessComponent):
         )
     
 
-class Latex(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+class Latex(Component):
+    def __init__(self, body: str, help: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.help = help
         
@@ -159,9 +159,9 @@ class Latex(StatelessComponent):
         pass
     
 
-class Diagram(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+class Diagram(Component):
+    def __init__(self, body: str, help: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.help = help
         

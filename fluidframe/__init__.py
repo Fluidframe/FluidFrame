@@ -1,4 +1,3 @@
-from pathlib import Path
+from fluidframe.core.fluidframe import FluidFrame, Component
 
-def get_lib_path() -> str:
-    return Path(__file__).resolve().parent
+__all__ = ['FluidFrame', 'Component']
