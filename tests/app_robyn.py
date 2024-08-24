@@ -93,12 +93,12 @@ async def message(ws: WebSocketConnector):
 
 app.add_route("GET", "/", sample)
 
-lib_dir = get_lib_path()
-fluidpack_dir = Path(__file__).resolve().parent / "fluidpack"
+lib_dir = get_lib_path("fluidpack")
+fluidpack_dir = get_lib_path("fluidpack")
 
-app.add_directory('/style', str(fluidpack_dir), 'style')
-app.add_directory(f'/{PUBLIC_DIR}', str(lib_dir / "public"))
-app.add_directory(f'/{MODULES_DIR}', str(lib_dir / "node_modules"))
+app.add_directory('/style', get_lib_path('style'))
+app.add_directory(f'/{PUBLIC_DIR}', get_lib_path("public"))
+app.add_directory(f'/{MODULES_DIR}', get_lib_path("node_modules"))
 
 
 @app.get("/get_file")

@@ -1,6 +1,6 @@
 from html import escape
 from typing import Optional, Union
-from fluidframe import Component
+from fluidframe.core import Component
 from fluidframe.public import js_bundle as public_files
 from fluidframe.utilities.helper import markdown_to_html
 from fluidframe.node_modules import js_bundle as node_modules

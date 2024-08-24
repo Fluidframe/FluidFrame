@@ -1,5 +1,5 @@
 from fluidframe.core import button
-from fluidframe import Component
+from fluidframe.core import Component
 from typing import Union, Callable, Any
 
 class Button(Component):

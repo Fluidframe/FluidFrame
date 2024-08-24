@@ -9,31 +9,31 @@ from fluidframe.utilities.helper import generate_id
 from fluidframe.core.wrappers import html_render_wrap
 from starlette.middleware.sessions import SessionMiddleware
 from fluidframe.config import PUBLIC_DIR, HOT_RELOAD_SCRIPT
+from fluidframe.utilities.tailwind_utils import tailwind_build
 from starlette.websockets import WebSocketDisconnect, WebSocket
 from fluidframe.core import html, body, meta, script, link, div, head, title, div
 
 
 class Component(ABC):
     def __init__(self) -> None:
-        self.styles = []
-        self.scripts = []
-        self.children = []
-        self.root: Optional[FluidFrame] = None
-        self.htmx_attributes: Dict[str, str] = {}
-        self.type = self.__class__.__name__.lower()
-        self.__parent__: Optional['Component'] = None
+        self.type:               str = self.__class__.__name__.lower()
+        self.root:               Optional[FluidFrame] = None
+        self.styles:             List[str] = []
+        self.scripts:            List[str] = []
+        self.children:           List[Component|str] = []
+        self.__parent__:         Optional['Component'] = None
+        self.htmx_attributes:    Dict[str, str] = {}
+        self.__event_registry__: Dict[str, Callable] = {}
+        
         self.id = generate_id(self.type)
     
     def child(self, component: 'Component') -> 'Component':
         if isinstance(component, Component):
-            component.__parent__=self
             component.root = self.root
+            component.__parent__ = self
+            self.__event_registry__.update(component.__event_registry__)
         self.children.append(component)
         return component
-    
-    @abstractmethod
-    def render(self) -> str:
-        pass
     
     def on_event(self, trigger: str, target: 'Component'|List['Component'], action: str, transition: bool = True, cache: bool = False) -> Callable:
         
@@ -61,26 +61,34 @@ class Component(ABC):
             self.render = wrapped_render
 
             # Register the route
-            self.root.add_event_route(route_path, func)
+            self.__event_registry__[route_path] = func
+            if self.__parent__:
+                self.__parent__.__event_registry__.update(self.__event_registry__)
+
             return func
         return decorator
     
+    @abstractmethod
+    def render(self) -> str:
+        pass
+    
+    
+    
+
 
 class FluidFrame(Starlette):
-    def __init__(self, reload: bool = False) -> None:
+    def __init__(self, dev_mode: bool = False) -> None:
         super().__init__()
-        self.id = "root"
-        self.reload = reload
-        self.children: List[Component] = []
-        self.add_fluidroute("/", self.render)
-        self.add_websocket_route("/live-reload", self.hot_reload_socket)
-        self.add_middleware(SessionMiddleware, secret_key='your-secret-key')
-        self.mount(f'/{PUBLIC_DIR}', StaticFiles(directory=str(get_lib_path() / "public")))
+        self.id:                 str = "root"
+        self.dev_mode:           bool = dev_mode
+        self.children:           List[Component] = []
+        self.__event_registry__: Dict[str, Callable] = {}
     
     def child(self, component: 'Component') -> 'Component':
         if isinstance(component, Component):
             component.root = self
-            component.__parent__=self
+            component.__parent__ = self
+            self.__event_registry__.update(component.__event_registry__)
         self.children.append(component)
         return component
     
@@ -92,13 +100,11 @@ class FluidFrame(Starlette):
         await ws.accept()
         try:
             while True:
-                await ws.receive_text()
-                await ws.send_text("pong")
+                msg = await ws.receive_text()
+                if msg=="ping":
+                    await ws.send_text("pong")
         except WebSocketDisconnect:
             print('Client connection closed')
-    
-    def add_event_route(self, path: str, handler: Callable):
-        self.add_fluidroute(path, handler)
     
     def render(self) -> str:
         return ''.join(["<!DOCTYPE html>",
@@ -110,7 +116,7 @@ class FluidFrame(Starlette):
                         script(src="https://cdn.tailwindcss.com"),
                         script(src=f"{PUBLIC_DIR}/scripts/dependency_manager.js"),
                         script(src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.2/htmx.min.js"),
-                        requires(HOT_RELOAD_SCRIPT) if self.reload else "",
+                        requires(HOT_RELOAD_SCRIPT) if self.dev_mode else "",
                     ),
                     body(
                         div(
@@ -122,3 +128,15 @@ class FluidFrame(Starlette):
                 ]
             )
         ])
+        
+    def build(self):
+        self.__event_registry__["/"] = self.render
+        for path, handler in self.__event_registry__.items():
+            self.add_fluidroute(path, handler)
+        
+        if self.dev_mode:
+            self.add_websocket_route("/live-reload", self.hot_reload_socket)
+        else:
+            tailwind_build()
+        self.add_middleware(SessionMiddleware, secret_key='your-secret-key')
+        self.mount(f'/{PUBLIC_DIR}', StaticFiles(directory=get_lib_path("public")))

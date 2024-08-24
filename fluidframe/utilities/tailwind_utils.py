@@ -66,7 +66,6 @@ def generate_tailwind_config(fluidframe_dir):
         os.path.join(package_path, "components", "**", "*.py"),
         os.path.join(package_path, "public", "**", "*.js"),
         os.path.join(package_path, "core", "**", "*.py"),
-        os.path.join(package_path, "templates", "**", "*.html"),
     ]
 
     config_content = f"""

@@ -1,5 +1,5 @@
 from typing import Optional, Union
-from fluidframe import Component
+from fluidframe.core import Component
 from fluidframe.core import div, p, h1, h2, h4
 
 

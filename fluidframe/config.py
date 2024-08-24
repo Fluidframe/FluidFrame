@@ -16,7 +16,6 @@ STYLES = [
 ]
 
 SCRIPTS = [
-    # f"{MODULES_DIR}/prismjs/prism.js",
     f"{MODULES_DIR}/htmx.org/dist/htmx.min.js",
     f"{PUBLIC_DIR}/scripts/dependency_manager.js",
 ]
