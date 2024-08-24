@@ -12,7 +12,7 @@
         ],
         "name": "fluidframe.core.tags.tags",
         "sources": [
-            "/home/aswi/Projects/fluidframe/fluidframe/core/tags/tags.pyx"
+            "fluidframe/core/tags/tags.pyx"
         ]
     },
     "module_name": "fluidframe.core.tags.tags"

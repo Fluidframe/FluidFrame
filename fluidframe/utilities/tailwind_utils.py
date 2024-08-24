@@ -1,54 +1,90 @@
 import os
-from pathlib import Path
+import subprocess
+import importlib.util
+from fluidframe.utils import get_lib_path
+from fluidframe.config import FLUIDFRAME_BUILD_DIR
 
 
-def generate_local_tailwind_config(project_root, library_root):
-    project_root = Path(project_root)
-    library_root = Path(library_root)
+def tailwind_build(args={}):
+    """
+    Builds the Tailwind CSS stylesheets for the FluidFrame project.
+
+    This function changes the current working directory to the FluidFrame build directory
+    and runs the Tailwind CSS build command using the `subprocess.run` function.
+    The input CSS file is specified as 'input.css' and the output CSS file is specified as
+    'dist/output.css'. If the FluidFrame build directory does not exist, an error message is
+    printed and the function returns without building the stylesheets.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        subprocess.CalledProcessError: If there is an error during the Tailwind CSS build process.
+        KeyboardInterrupt: If the build process is interrupted by the user.
+
+    """
+    fluidframe_dir = os.path.join(os.getcwd(), FLUIDFRAME_BUILD_DIR)
+    if not os.path.exists(fluidframe_dir):
+        print(f"Error: FluidFrame's package directory {FLUIDFRAME_BUILD_DIR} not found. Please run 'fluidframe init <project_name>' first.")
+        return
+
+    os.chdir(fluidframe_dir)
+    try:
+        subprocess.run(['npx', 'tailwindcss', '-i', 'input.css', '-o', 'dist/output.css'], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error on Tailwind build process: {e}")
+    except KeyboardInterrupt:
+        print("Tailwind build process stopped.")
+    os.chdir(os.getcwd())
+
+def get_package_path():
+    """Get the absolute path to the installed FluidFrame package."""
+    spec = importlib.util.find_spec("fluidframe")
+    if spec is None:
+        raise ImportError("FluidFrame package not found")
+    return os.path.dirname(spec.origin)
+
+def generate_tailwind_config(fluidframe_dir):
+    """
+    Generates a Tailwind configuration file for a FluidFrame project.
+
+    Parameters:
+    fluidframe_dir (str): The directory path of the FluidFrame project.
+
+    Returns:
+    None
+
+    The function generates a tailwind.config.js file in the specified FluidFrame project directory.
+    It includes the library files and user project files in the content section of the configuration.
+    """
+    package_path = get_lib_path()
     
-    default_config_path = library_root / "default_tailwind_config.js"
-
-    with default_config_path.open('r') as default_file:
-        default_config = default_file.read()
-
-    # Generate library paths
-    library_paths = [
-        os.path.relpath(str(library_root / "app.py"), start=str(project_root)),
-        os.path.relpath(str(library_root / "fluidframe" / "core" / "components.py"), start=str(project_root)),
-        os.path.relpath(str(library_root / "fluidframe" / "components" / "**" / "*.py"), start=str(project_root)),
-        os.path.relpath(str(library_root / "fluidframe" / "templates" / "index.html"), start=str(project_root)),
+    library_files = [
+        os.path.join(package_path, "components", "**", "*.py"),
+        os.path.join(package_path, "public", "**", "*.js"),
+        os.path.join(package_path, "core", "**", "*.py"),
     ]
 
-    library_paths_str = ',\n    '.join(f'"{path}"' for path in library_paths)
-
-    local_config = f"""const defaultConfig = {default_config}
-
-defaultConfig.content = [
-    {library_paths_str}
-];
-
-/** @type {{import('tailwindcss').Config}} */
+    config_content = f"""
 module.exports = {{
-  ...defaultConfig,
   content: [
-    ...defaultConfig.content,
-    // Add your custom content paths here
+    // Library files
+{''.join([f"    '{f}',\n" for f in library_files])}
+    // User project files
+    '../src/**/*.{{html,py}}'
   ],
   theme: {{
-    ...defaultConfig.theme,
-    extend: {{
-      // Add your custom theme extensions here
-    }},
+    extend: {{}},
   }},
-  plugins: [
-    ...defaultConfig.plugins,
-    // Add your custom plugins here
-  ],
+  plugins: [],
 }}
 """
 
-    local_config_path = project_root / "tailwind.config.js"
-    with local_config_path.open('w') as local_file:
-        local_file.write(local_config)
+    config_path = os.path.join(fluidframe_dir, 'tailwind.config.js')
+    with open(config_path, 'w') as f:
+        f.write(config_content)
 
-    print(f"Generated local tailwind.config.js at {local_config_path}")
+    print(f"Generated tailwind.config.js at {config_path}")
