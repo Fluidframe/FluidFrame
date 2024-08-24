@@ -32,14 +32,21 @@ Pre-built Components: Jump-start your development with a library of pre-built, c
 - **Pre-built Components**: Jump-start your development with a library of pre-built, customizable UI components which are similar to that of `streamlit` so for those who knows it fluidframe becomes a piece of cake **without the full code rerun of streamlit**.
 
 ## Example
-Here's a simple example of a text component in FluidFrame with and without a tooltip:
+### Here's a simple example of a text component in FluidFrame with and without a tooltip:
+
 ```python
-class Text(StatelessComponent):
-    def __init__(self, parent: Union[Component, Root], body: str, help: Optional[str]=None) -> None:
-        super().__init__(parent)
+from fluidframe.core import div, p
+from fluidframe.core import Component
+from fluidframe.core.dependency import requires
+from fluidframe.public import js_bundle as public_files
+from fluidframe.utilities.package_manager import url_for_public
+
+class Text(Component):
+    def __init__(self, body: str, help: Optional[str]=None) -> None:
+        super().__init__()
         self.body = body
         self.help = help 
-        self.scripts=["lib_static/tooltip.js"]
+        self.scripts=url_for_public(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
@@ -49,11 +56,100 @@ class Text(StatelessComponent):
                 add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 mx-5 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
                 id=self.id, cls="relative", onmouseenter=show_tooltip(self.id), onmouseleave=hide_tooltip(self.id)
             )
-           
         return div(
             p(self.body, cls="text-sm text-gray-900 dark: text-white"), 
             id=self.id, cls="relative"
         )
+```
+
+---
+
+### Simple button:
+```python
+from fluidframe.core import button
+from fluidframe.core import Component
+
+class Button(Component):
+    def __init__(self, label: str) -> None:
+        super().__init__()
+        self.label = label
+
+    def render(self) -> str:
+        return button(self.label, cls="bg-blue-500 m-5 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded", id=self.id)
+
+```
+
+---
+
+### Simple counter application:
+```python
+import uvicorn
+from fluidframe.core import FluidFrame, Component
+from fluidframe.components.text_components import Header
+from fluidframe.components.action_components import Button
+
+app = FluidFrame(dev_mode=False)
+
+n=0
+header = Header("Here we show a dynamic number", help="This will change when the button is clicked")
+
+increment_btn = Button("Increment")
+@increment_btn.on_event(trigger="click", target=header, action="innerHTML", transition=True, cache=False)
+def increment() -> str:
+    global n, header
+    n+=1
+    header.body=f"You have clicked the button to increment {n}"
+    return header.render()
+
+decrement_btn = Button("Decrement")
+@decrement_btn.on_event(trigger="click", target=header, action="innerHTML", transition=True, cache=False)
+def decrement() -> str:
+    global n, header
+    n-=1         
+    header.body=f"You have clicked the button to decrement {n}"
+    return header.render()
+
+
+app.child(increment_btn)
+app.child(header)
+app.child(decrement_btn)
+
+app.build()
+if __name__ == '__main__':
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+```
+
+---
+
+### Simple application which loads more content when button clicked
+```python
+import uvicorn
+from fluidframe.core import FluidFrame, Component
+from fluidframe.components.text_components import Header
+from fluidframe.components.action_components import Button
+
+btn = app.child(Button("Load More"))
+
+# A quick component
+class Item(Component):
+    def __init__(self, text: str) -> None:
+        super().__init__()
+        self.text = text
+    
+    def render(self) -> str:
+        return p(self.text, id=self.id, cls="m-5 border border-gray-300 p-5 text-center rounded-lg shadow-lg")   
+       
+
+t1 = app.child(Item("Loaded Section"))
+t2 = app.child(Item("Loaded Section")) 
+
+@btn.on_event(trigger="click", target=[t1, t2], action="outerHTML", cache=False, transition=True)
+def load_more() -> str:   
+    return t1.render() + t2.render()
+
+app.build()
+if __name__ == '__main__':
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
 ```
 
 ---
