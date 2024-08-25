@@ -1,9 +1,3 @@
-from functools import lru_cache
-from libc.string cimport memcpy
-from cpython.mem cimport PyMem_Malloc, PyMem_Free
-from cpython.string cimport PyString_InternFromString
-
-
 __all__ = [
     'i', 'a', 'b', 'p', 's', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'dd', 'dl', 'dt', 'em', 'li', 'rp', 'rt', 'ol', 'ul', 'td', 'th', 'tr', 'var', 'nav', 'sub', 'sup', 'svg', 'ins',
     'kbd', 'dfn', 'div', 'pre', 'del_', 'map_', 'ruby', 'samp', 'slot', 'span', 'html', 'form', 'head', 'abbr', 'main', 'mark', 'math', 'menu', 'body', 'cite', 'code', 'data', 'time_', 'aside',
@@ -26,37 +20,43 @@ cdef class Element:
         self.starting_tag = f"<{tag} "
 
     def __call__(self, *args, **kwargs):
-        cdef list attributes = []
-        cdef list content_items = []
         cdef object arg
         cdef str key, value
+        cdef list components = [self.starting_tag]
+
+        if kwargs.pop('defer', None):
+            components.append(' defer')
+        if kwargs.pop('async_', None):
+            components.append(' async')
 
         i = kwargs.pop('i', None)
-        content = kwargs.pop('content', None)
-        content = i or content
+        content = kwargs.pop('content', i)
+
+        for key, value in kwargs.items():
+            key = 'class' if key == 'cls' else key.replace('_', '-')
+            components.append(f' {key}="{value}"')
+
+        if not self.closing_tag:
+            components.append("/>")
+            return ''.join(components)
+
+        components.append(">")
+
         if content is not None:
             if isinstance(content, list):
-                content_items.extend([str(c) for c in content])
+                components.extend([str(c) for c in content])
             else:
-                content_items.append(str(content))
+                components.append(str(content))
 
         for arg in args:
             if isinstance(arg, list):
-                content_items.extend([str(ar) for ar in arg])  
+                components.extend([str(ar) for ar in arg])  
             else: 
-                content_items.append(str(arg))
+                components.append(str(arg))
 
-        for key, value in kwargs.items():
-            key = 'class' if key == 'cls' else key
-            attributes.extend([key.replace('_', '-'), '="', value, '" '])
+        components.append(self.end_tag)
 
-        attr_str = ''.join(attributes)
-        content_str = ''.join(content_items)
-
-        if not self.closing_tag:
-            return ''.join([self.starting_tag, attr_str, ' />'])
-
-        return ''.join([self.starting_tag, attr_str, ">", content_str, self.end_tag])
+        return ''.join(components)
 
     def __str__(self):
         return self()

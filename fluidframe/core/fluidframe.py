@@ -1,12 +1,13 @@
+import json
 from abc import ABC, abstractmethod
 from fluidframe.utils import get_lib_path
 from starlette.responses import JSONResponse
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from fluidframe.core.dependency import requires
-from typing import Optional, Callable, Dict, List
 from fluidframe.utilities.helper import generate_id
 from fluidframe.core.wrappers import html_render_wrap
+from typing import Optional, Callable, Dict, List, Any
 from starlette.middleware.sessions import SessionMiddleware
 from fluidframe.config import PUBLIC_DIR, HOT_RELOAD_SCRIPT
 from fluidframe.utilities.tailwind_utils import tailwind_build
@@ -14,32 +15,40 @@ from starlette.websockets import WebSocketDisconnect, WebSocket
 from fluidframe.core import html, body, meta, script, link, div, head, title, div
 
 
-class Component(ABC):
+
+class State:
     def __init__(self) -> None:
-        self.type:               str = self.__class__.__name__.lower()
-        self.root:               Optional[FluidFrame] = None
-        self.styles:             List[str] = []
-        self.scripts:            List[str] = []
-        self.children:           List[Component|str] = []
-        self.__parent__:         Optional['Component'] = None
-        self.htmx_attributes:    Dict[str, str] = {}
-        self.__event_registry__: Dict[str, Callable] = {}
+        self.id:               str
+        self.type:             str = self.__class__.__name__.lower()
+        self.state:            Dict[str: Any] = {}
+        self._parent_:         Optional['Component'] = None
+        self.htmx_attributes:  Dict[str, Any] = {}
+        self._event_registry_: Dict[str, Callable] = {}
         
-        self.id = generate_id(self.type)
+    def use_state(self, state: Dict) -> None:
+        self.state = state
     
-    def child(self, component: 'Component') -> 'Component':
-        if isinstance(component, Component):
-            component.root = self.root
-            component.__parent__ = self
-            self.__event_registry__.update(component.__event_registry__)
-        self.children.append(component)
-        return component
+    def set_state(self) -> str:
+        return f"state='{json.dumps(self.state)}'"
     
-    def on_event(self, trigger: str, target: 'Component'|List['Component'], action: str, transition: bool = True, cache: bool = False) -> Callable:
+    def bind_state(self) -> str:
+        pass
+    
+    def on_event(self, trigger: str, target: 'Component'|List['Component']|str|List[str], action: str, transition: bool = True, cache: bool = False) -> Callable:
         
         trigger = f"{trigger} once" if cache else trigger
         action = f"{action} transition:true" if transition else action
-        target_ids = f"#{target.id}" if isinstance(target, Component) else f"{', '.join([f'#{t.id}' for t in target])}"
+        
+        target_ids = f"#{self.id}"
+        if isinstance(target, str):
+            target_ids = f"#{target}"
+        elif isinstance(target, Component):
+            target_ids = f"#{target.id}" 
+        elif isinstance(target, list):
+            if isinstance(target, str): 
+                target_ids = f"{', '.join([f'#{t}' for t in target])}"
+            else: 
+                target_ids =f"{', '.join([f'#{t.id}' for t in target])}"
         
         def decorator(func: Callable):
             route_path = f"/{self.id}/{trigger}"
@@ -61,19 +70,49 @@ class Component(ABC):
             self.render = wrapped_render
 
             # Register the route
-            self.__event_registry__[route_path] = func
-            if self.__parent__:
-                self.__parent__.__event_registry__.update(self.__event_registry__)
+            self._event_registry_[route_path] = func
+            if self._parent_:
+                self._parent_._event_registry_.update(self._event_registry_)
 
             return func
         return decorator
+    
+    def click(self, target: 'Component'|List['Component']|str|List[str], action: str, transition: bool = True) -> Callable:
+        return self.on_event("click", target, action, transition) 
+    
+    def mouseenter(self, target: 'Component'|List['Component']|str|List[str], action: str, transition: bool = True) -> Callable:
+        return self.on_event("mouseenter", target, action, transition)
+    
+    def mouseexit(self, target: 'Component'|List['Component']|str|List[str], action: str, transition: bool = True) -> Callable:
+        return self.on_event("mouseexit", target, action, transition)
+    
+    def render(self) -> str:
+        pass
+    
+
+
+class Component(State, ABC):
+    def __init__(self) -> None:
+        super().__init__()
+        self.id:                 str = generate_id(self.type)
+        self.root:               Optional[FluidFrame] = None
+        self.styles:             List[str] = []
+        self.scripts:            List[str] = []
+        self.children:           List[Component|str] = []
+    
+    def child(self, component: 'Component') -> 'Component':
+        if isinstance(component, Component):
+            component.root = self.root
+            component._parent_ = self
+            self._event_registry_.update(component._event_registry_)
+        self.children.append(component)
+        return component
     
     @abstractmethod
     def render(self) -> str:
         pass
     
-    
-    
+
 
 
 class FluidFrame(Starlette):
@@ -82,13 +121,13 @@ class FluidFrame(Starlette):
         self.id:                 str = "root"
         self.dev_mode:           bool = dev_mode
         self.children:           List[Component] = []
-        self.__event_registry__: Dict[str, Callable] = {}
+        self._event_registry_:   Dict[str, Callable] = {}
     
     def child(self, component: 'Component') -> 'Component':
         if isinstance(component, Component):
             component.root = self
-            component.__parent__ = self
-            self.__event_registry__.update(component.__event_registry__)
+            component._parent_ = self
+            self._event_registry_.update(component._event_registry_)
         self.children.append(component)
         return component
     
@@ -115,7 +154,7 @@ class FluidFrame(Starlette):
                         meta(charset="UTF-8"),
                         script(src="https://cdn.tailwindcss.com"),
                         script(src=f"{PUBLIC_DIR}/scripts/dependency_manager.js"),
-                        script(src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.2/htmx.min.js"),
+                        script(src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.2/htmx.min.js", async_=True),
                         requires(HOT_RELOAD_SCRIPT) if self.dev_mode else "",
                     ),
                     body(
@@ -130,8 +169,8 @@ class FluidFrame(Starlette):
         ])
         
     def build(self):
-        self.__event_registry__["/"] = self.render
-        for path, handler in self.__event_registry__.items():
+        self._event_registry_["/"] = self.render
+        for path, handler in self._event_registry_.items():
             self.add_fluidroute(path, handler)
         
         if self.dev_mode:

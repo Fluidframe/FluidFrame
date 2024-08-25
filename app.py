@@ -15,20 +15,18 @@ n=0
 header = Header("Here we show a dynamic number", help="This will change when the button is clicked")
 
 increment_btn = Button("Increment")
-@increment_btn.on_event(trigger="click", target=header, action="innerHTML", transition=True, cache=False)
+@increment_btn.click(target=header.text_id, action="innerHTML", transition=True)
 def increment() -> str:
-    global n, header
+    global n
     n+=1
-    header.body=f"You have clicked the button to increment {n}"
-    return header.render()
+    return f"You have clicked the button to increment {n}"
 
 decrement_btn = Button("Decrement")
-@decrement_btn.on_event(trigger="click", target=header, action="innerHTML", transition=True, cache=False)
+@decrement_btn.click(target=header.text_id, action="innerHTML", transition=True)
 def decrement() -> str:
-    global n, header
+    global n
     n-=1         
-    header.body=f"You have clicked the button to decrement {n}"
-    return header.render()
+    return f"You have clicked the button to decrement {n}"
 
 
 app.child(increment_btn)
@@ -72,7 +70,7 @@ class Item(Component):
 t1 = app.child(Item("Loaded Section"))
 t2 = app.child(Item("Loaded Section")) 
 
-@btn.on_event(trigger="click", target=[t1, t2], action="outerHTML", cache=False, transition=True)  #
+@btn.click(target=t1, action="outerHTML")
 def load_more() -> str:   
     return t1.render() + t2.render()
 

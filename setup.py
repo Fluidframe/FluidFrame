@@ -1,5 +1,5 @@
 import sys, os
-import subprocess
+import subprocess, platform
 from Cython.Build import cythonize
 from setuptools.command.build_py import build_py
 from setuptools import setup, find_packages, Extension
@@ -22,7 +22,8 @@ class CustomBuild(build_py):
         fluidframe_dir = os.path.join(current_dir, 'fluidframe')
         os.chdir(fluidframe_dir)
         try:
-            subprocess.run(['npm', 'install'], check=True)
+            npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
+            subprocess.run([npm_command, 'install'], check=True)
             print("Successfully installed FluidFrame dependencies")
             generate_source_map(os.path.join(fluidframe_dir, 'public'))
             generate_source_map(os.path.join(fluidframe_dir, 'node_modules'))
@@ -35,9 +36,9 @@ extensions = [
     Extension(
         "fluidframe.core.tags.tags", 
         ["fluidframe/core/tags/tags.pyx"],
-        extra_compile_args=["-O3"], 
-        extra_link_args=["-O3"],
-        py_limited_api=True
+        extra_link_args = ["-O3"] if platform.system() != "Windows" else [],
+        extra_compile_args = ["-O3"] if platform.system() != "Windows" else [],
+        py_limited_api = True
     )
 ]
 
