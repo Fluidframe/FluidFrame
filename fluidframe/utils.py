@@ -4,9 +4,7 @@ from typing import Optional
 
 def get_lib_path(relative_path: Optional[str]=None) -> str:
     base_path = Path(__file__).resolve().parent
-    if relative_path is None:
-        return str(base_path)
-    else:
+    if relative_path is not None:
         # Normalize the relative path to avoid issues with leading separators
         relative_path = relative_path.lstrip("/\\")
         
@@ -18,3 +16,4 @@ def get_lib_path(relative_path: Optional[str]=None) -> str:
         
         # Return the path with the appropriate slash for the current OS
         return str(full_path.as_posix() if os.name != 'nt' else full_path)
+    return str(base_path)

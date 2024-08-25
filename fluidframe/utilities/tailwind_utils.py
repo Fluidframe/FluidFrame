@@ -33,7 +33,8 @@ def tailwind_build(args={}):
 
     os.chdir(fluidframe_dir)
     try:
-        subprocess.run(['npx', 'tailwindcss', '-i', 'input.css', '-o', 'dist/output.css'], check=True)
+        npx_command = 'npx.cmd' if os.name == 'nt' else 'npx'
+        subprocess.run([npx_command, 'tailwindcss', '-i', 'input.css', '-o', 'dist/output.css'], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error on Tailwind build process: {e}")
     except KeyboardInterrupt:

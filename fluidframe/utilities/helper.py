@@ -4,6 +4,7 @@ from uuid import uuid4
 from typing import List
 from bs4 import BeautifulSoup
 from markdown_it import MarkdownIt
+from fluidframe.utils import get_lib_path
 from mdit_py_plugins.anchors import anchors_plugin
 from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.tasklists import tasklists_plugin
@@ -28,18 +29,19 @@ def prettify(html: str) -> str:
     return re.sub(r'\n\s*\n', '\n\n', html_string)
 
 def save_as_html(file_path, html_string):
+    html_string=prettify(html_string)
+    file_path=get_lib_path(file_path)
     with open(file_path, 'w') as file:
         file.write(html_string)
     print(f"HTML content saved to {file_path}")
 
 def generate_id(key: str) -> str:
-    if key == "root":
-        return "root"
-    else:
+    if key != "root":
         _key = f"{key}-{str(uuid4())[:4]}"
         hash_object = hashlib.sha1(_key .encode())
         hash_code = hash_object.hexdigest()[:6]
         return f"{key}-{hash_code}"
+    return "root"
     
     
 class DotDict(dict):
