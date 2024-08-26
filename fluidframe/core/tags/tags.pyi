@@ -1940,19 +1940,29 @@ def source(*args, **kwargs) -> str:
     ...
     
 
-def script(*args, **kwargs) -> str: 
-    """**Generate an HTML <script/> element.**
+def script(src: str, async_: bool = False, defer: bool = False, **kwargs) -> str:
+    """Generate an HTML <script> element.
 
-    The arguments to this function will be used as the attributes of the
-    HTML element. Keyword arguments will be used as the attributes of the
-    element.
+    This function constructs an HTML <script> element with the specified 
+    source URL and optional attributes. The `async_` and `defer` parameters 
+    control the loading behavior of the script, while additional keyword 
+    arguments can be used to set other attributes of the element.
 
-    For example, `script( id='script-id', cls='specific-class')` will generate
-    an HTML element like `<script id="script-id" class="specific-class"/>`.
+    Args:
+        src (str): The source URL of the script file.
+        async_ (bool, optional): If True, the script will be executed 
+            asynchronously. Defaults to False.
+        defer (bool, optional): If True, the script will be executed 
+            after the document has been parsed. Defaults to False.
+        **kwargs: Additional attributes to be added to the <script> element, 
+            such as `id`, `class`, `type`, etc.
 
-    **Returns:**
-    
-        str: The generated HTML element.
+    Returns:
+        str: The generated HTML <script> element as a string.
+
+    Example:
+        >>> script(src='script.js', async_=True)
+        '<script src="script.js" async ></script>'
     """
     ...
     

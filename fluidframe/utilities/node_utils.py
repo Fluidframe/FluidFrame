@@ -59,12 +59,10 @@ def init_project(args):
     print(f"Initializing FluidFrame project: {project_name}")
 
     # Create fluidframe directory if it doesn't exist
-    if not os.path.exists(fluidframe_dir):
-        os.makedirs(fluidframe_dir)
+    os.makedirs(fluidframe_dir, exist_ok=True)
         
     # Create src directory if it doesn't exist
-    if not os.path.exists(src_dir):
-        os.makedirs(src_dir)
+    os.makedirs(src_dir, exist_ok=True)
 
     # Create fresh package.json for the user's project
     create_fresh_package_json(project_name, fluidframe_dir)
@@ -81,16 +79,18 @@ def init_project(args):
     os.chdir(fluidframe_dir)
 
     # Install dependencies
+    npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
     try:
-        subprocess.run(['npm', 'install'], check=True)
+        subprocess.run([npm_command, 'install'], check=True)
         print("Successfully installed dependencies")
     except subprocess.CalledProcessError as e:
         print(f"Error installing dependencies: {e}")
         return
 
     # Run initial Tailwind build
+    npx_command = 'npx.cmd' if os.name == 'nt' else 'npx'
     try:
-        subprocess.run(['npx', 'tailwindcss', '-i', 'input.css', '-o', 'dist/output.css'], check=True)
+        subprocess.run([npx_command, 'tailwindcss', '-i', 'input.css', '-o', 'dist/output.css'], check=True)
         print("Successfully built initial CSS")
     except subprocess.CalledProcessError as e:
         print(f"Error building initial CSS: {e}")
@@ -126,8 +126,9 @@ def install(args):
 
     print(f"Installing Node.js package: {package_name}")
 
+    npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
     try:
-        subprocess.run(['npm', 'install', package_name], check=True)
+        subprocess.run([npm_command, 'install', package_name], check=True)
         print(f"Successfully installed {package_name}")
     except subprocess.CalledProcessError as e:
         print(f"Error installing {package_name}: {e}")

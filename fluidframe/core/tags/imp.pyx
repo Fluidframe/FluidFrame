@@ -1,34 +1,53 @@
-from typing import Callable, Iterable
-from fluidframe.utilities.helper import prettify
+from functools import lru_cache
+from libc.string cimport memcpy
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
+from cpython.string cimport PyString_InternFromString
 
-class Element:
-    def __init__(self, tag: str, closing_tag: bool = True):
+
+__all__ = [
+    'i', 'a', 'b', 'p', 's', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'dd', 'dl', 'dt', 'em', 'li', 'rp', 'rt', 'ol', 'ul', 'td', 'th', 'tr', 'var', 'nav', 'sub', 'sup', 'svg', 'ins',
+    'kbd', 'dfn', 'div', 'pre', 'del_', 'map_', 'ruby', 'samp', 'slot', 'span', 'html', 'form', 'head', 'abbr', 'main', 'mark', 'math', 'menu', 'body', 'cite', 'code', 'data', 'time_', 'aside',
+    'audio', 'style', 'table', 'tbody', 'video', 'small', 'label', 'meter', 'tfoot', 'thead', 'title', 'hgroup', 'select', 'strong', 'legend', 'option', 'output', 'button', 'canvas', 'dialog',
+    'figure', 'footer', 'header', 'iframe', 'object_', 'section', 'summary', 'caption', 'address', 'article', 'details', 'fieldset', 'colgroup', 'datalist', 'template', 'textarea', 'noscript',
+    'optgroup', 'figcaption', 'blockquote', 'hr', 'br', 'img', 'col', 'wbr', 'area', 'base', 'link', 'meta', 'track', 'embed', 'input_', 'source', 'script', 'menuitem'
+]
+
+
+cdef class Element:
+    cdef str tag
+    cdef bint closing_tag
+    cdef public str end_tag
+    cdef public str starting_tag
+
+    def __init__(self, str tag, bint closing_tag=True):
         self.tag = tag
         self.closing_tag = closing_tag
         self.end_tag = f"</{tag}>"
         self.starting_tag = f"<{tag} "
 
     def __call__(self, *args, **kwargs):
-        attributes = []
-        content_items = []
-        
-        content = kwargs.pop('content', None)
-        if content:
+        cdef list attributes = []
+        cdef list content_items = []
+        cdef object arg
+        cdef str key, value
+
+        i = kwargs.pop('i', None)
+        content = kwargs.pop('content', i)
+        if content is not None:
             if isinstance(content, list):
-                content_items.extend(content)
+                content_items.extend([str(c) for c in content])
             else:
-                content_items.append(content)
+                content_items.append(str(content))
 
         for arg in args:
             if isinstance(arg, list):
-                content_items.extend(arg)
-            else:
-                content_items.append(arg)
+                content_items.extend([str(ar) for ar in arg])  
+            else: 
+                content_items.append(str(arg))
 
         for key, value in kwargs.items():
-            key = key.replace('_', '-')
-            key = 'class' if key=='cls' else key
-            attributes.extend([key, '="', value, '" '])
+            key = 'class' if key == 'cls' else key
+            attributes.extend([key.replace('_', '-'), '="', value, '" '])
 
         attr_str = ''.join(attributes)
         content_str = ''.join(content_items)
@@ -38,77 +57,17 @@ class Element:
 
         return ''.join([self.starting_tag, attr_str, ">", content_str, self.end_tag])
 
-            
     def __str__(self):
         return self()
 
-'''
-class Element:
-    def __init__(self, tag: str, closing_tag: bool = True):
-        self.tag = tag
-        self.end_tag = f"</{tag}>"
-        self.starting_tag = f"<{tag} "
-        self.closing_tag = closing_tag
-
-    def __call__(self, *args, **kwargs) -> Iterable[str]:
-        components = [self.starting_tag]
-        
-        inner = kwargs.get('i', None)
-        inner = kwargs.get('body', inner)
-        inner = kwargs.get('inner', inner)
-        inner = kwargs.get('content', inner)
-        
-        # Handle attributes
-        for key, value in kwargs.items():
-            key = key.replace('_', '-')
-            key = 'class' if key == 'cls' else key
-            components.append(f'{key}="{value}" ')
-            
-        if not self.closing_tag:
-            components.append('/>')
-            return components
-        
-        components.append(">")
-        
-        if inner:
-            args = tuple(inner) if isinstance(inner, list) else (inner,)
-            
-        # Handle content (including nested elements)
-        for arg in args:
-            if isinstance(arg, list):
-                for item in self.flatten(arg):
-                    components.append(item)
-            else:
-                if isinstance(arg, Element):
-                    components.extend(arg())
-                else:
-                    components.append(arg)
-                    
-        components.append(self.end_tag)
-        
-        return components
-
-    def flatten(self, items):
-        """Recursively flattens a list of items."""
-        for item in items:
-            if isinstance(item, list):
-                yield from self.flatten(item)
-            else:
-                yield item
-'''
-
-def create_element(tag: str, closing_tag: bool=True) -> Callable:
-    element = Element(tag, closing_tag)
+def create_element(str tag, bint closing_tag=True):
+    cdef Element element = Element(tag, closing_tag)
     def element_factory(*args, **kwargs):
         return element(*args, **kwargs)
     return element_factory
 
-def render(html: list) -> str:
-    return ''.join(html)
 
-########################
-# Structural HTML Tags #
-########################
+
 i = create_element("i")
 a = create_element("a")
 b = create_element("b")
@@ -175,6 +134,7 @@ tfoot = create_element("tfoot")
 thead = create_element("thead")
 title = create_element("title")
 hgroup = create_element("hroup")
+script = create_element("script")
 select = create_element("select")
 strong = create_element("strong")
 legend = create_element("legend")
@@ -216,34 +176,4 @@ track = create_element("track", closing_tag=False)
 embed = create_element("embed", closing_tag=False)
 input_ = create_element("input", closing_tag=False)
 source = create_element("source", closing_tag=False)
-script = create_element("script", closing_tag=False)
 menuitem = create_element("menuitem", closing_tag=False)
-
-
-
-if __name__=="__main__":
-    content = div(cls="container", id="container_id", content=[
-        h1(cls="heading", content="This is a heading"),
-        img(src="https://example.com/image.png", alt="An example image", cls="image"),
-        p(content="This is a paragraph with a "),
-        div(content="This is a sample div with a text")
-    ])
-
-    content = prettify(content)
-    print(content)
-
-    print(50*"=")
-
-
-    content = html(
-        div(
-            h1("This is a heading", cls="heading"),
-            img(src="https://example.com/image.png", alt="An example image", cls="image"),
-            a("this is the body", cls="link", href="reference-link"),
-            cls="container-new", id="container_id",
-        )
-    )
-    content = prettify(content)
-    print(content)
-    
-    print(hr.__doc__)

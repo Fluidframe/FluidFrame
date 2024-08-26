@@ -58,18 +58,19 @@ class Header(Component):
         super().__init__()
         self.body = body
         self.help = help
+        self.text_id = f"{self.id}-text"
         self.scripts = url_for_public(public_files.scripts.tooltip_js)
         
     def render(self) -> str:
         if self.help:
             return div(
                 requires(self.scripts),
-                h2(self.body, cls="text-4xl text-gray-900 font-bold dark:text-white"),
-                add_tooltip(self.id, self.help, cls="invisible opacity-0 absolute z-10 mx-5 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
+                h2(self.body, id=self.text_id, cls="text-4xl text-gray-900 font-bold dark:text-white"),
+                add_tooltip(self.text_id, self.help, cls="invisible opacity-0 absolute z-10 mx-5 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity duration-500"),
                 id=self.id, cls="relative", onmouseenter=show_tooltip(self.id), onmouseleave=hide_tooltip(self.id)
             )
         return div(
-            h2(self.body, cls="text-4xl text-gray-900 font-bold dark:text-white"),
+            h2(self.body, id=self.text_id, cls="text-4xl text-gray-900 font-bold dark:text-white"),
             id=self.id, cls="relative"
         )
     

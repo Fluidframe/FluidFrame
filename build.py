@@ -1,4 +1,4 @@
-import os
+import os, platform
 from setuptools import Extension
 from Cython.Build import cythonize
 
@@ -7,15 +7,15 @@ def build(setup_kwargs):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     # Define the path to your .pyx file
-    pyx_path = os.path.join(current_dir, 'fluidframe', 'core', 'tags', 'tags.pyx')
+    pyx_path = os.path.join(current_dir, 'fluidframe_test', 'core', 'tags', 'tags.pyx')
     
     # Define the extension
     extensions = [
         Extension(
-            "fluidframe.core.tags.tags",
+            "fluidframe_test.core.tags.tags",
             [pyx_path],
-            extra_compile_args=["-O3"],
-            extra_link_args=["-O3"],
+            extra_link_args = ["-O3"] if platform.system() != "Windows" else [],
+            extra_compile_args = ["-O3"] if platform.system() != "Windows" else [],
             py_limited_api=True
         )
     ]
