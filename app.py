@@ -1,6 +1,6 @@
-import uvicorn
+import uvicorn, json
 from fluidframe.core import p, button, div, h2
-from fluidframe.core import FluidFrame, Component
+from fluidframe.core import FluidFrame, Component, State
 
 
 app = FluidFrame(dev_mode=False)
@@ -10,12 +10,14 @@ app = FluidFrame(dev_mode=False)
 # A simple counter #
 ####################
 class Button(Component):
-    def __init__(self, label: str) -> None:
+    def __init__(self, label: str, state:dict=None) -> None:
         super().__init__()
         self.label = label
+        if state:
+            self.use_state(state)
 
     def render(self) -> str:
-        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg ")
+        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg", state=self.add_state())
 
 class Card(Component):
     def __init__(self) -> None:
@@ -23,7 +25,7 @@ class Card(Component):
 
     def render(self) -> str:
         return div(
-            [child.render() for child in self.children],
+            [child.render() if isinstance(child, Component) else child for child in self.children],
             id=self.id, cls="max-w-md mx-auto mt-20 p-10 shadow-lg rounded-lg flex flex-col items-center justify-center space-y-5 bg-white/10 backdrop-blur-md border border-white/20"
         )
 
@@ -38,7 +40,7 @@ class Header(Component):
     def render(self) -> str:
         return div(
             h2(self.body, id=self.text_id, cls="text-4xl text-gray-900 font-bold dark:text-white"),
-            id=self.id, cls="relative", state=self.set_state()
+            id=self.id, cls="relative", state=self.add_state()
         )
 
 
@@ -47,16 +49,20 @@ header = Header("The count is 0")
 increment_btn = Button("Increment")
 decrement_btn = Button("Decrement")
 
-@increment_btn.click(swap="innerHTML", target=header.text_id, bind_state=header)
-def increment(state) -> str:
-    state['count']+=1
-    return f"The count is {state['count']}", state
+@increment_btn.click(swap="textContent", target=header.text_id, bind=header)
+def increment(state: State) -> str:
+    count = state.get('count')
+    count-=1
+    state.set('count', count)
+    return f"The count is {count}"
 
 
-@decrement_btn.click(swap="innerHTML", target=header.text_id, bind_state=header)
-def decrement(state) -> str:
-    state['count']-=1
-    return f"The count is {state['count']}", state
+@decrement_btn.click(swap="textContent", target=header.text_id, bind=header)
+def decrement(state: State) -> str:
+    count = state.get('count')
+    count+=1
+    state.set('count', count)
+    return f"The count is {count}"
 
 
 app.add_children(
@@ -71,31 +77,31 @@ app.add_children(
 ####################
 # Loading contents #
 ####################
-btn = app.child(Button("Load More"))
 
 # A quick component #
 class Item(Component):
     def __init__(self, text: str) -> None:
         super().__init__()
         self.text = text
-        self.item_number = 1
-        self.use_state(include='item_number')
     
     def render(self) -> str:
-        return p(self.text, id=self.id, cls="m-5 border border-gray-300 p-5 text-center rounded-lg shadow-lg", state=self.set_state())   
+        return p(self.text, cls="m-5 border border-gray-300 p-5 text-center rounded-lg shadow-lg", id=self.id)
        
-       
-list1 = app.child(Item("Loaded Section number 1"))
-list2 = app.child(Item("Loaded Section number 2"))
 
-@btn.click(target=list2, swap="outerHTML", bind_state=list1)
-def load_more(state) -> str: 
-    state['item_number']+=1
-    list3 = Item(f"Loaded Section number {state['item_number']}") 
-    state['item_number']+=1
-    list4 = Item(f"Loaded Section number {state['item_number']}") 
-    return list3.render(), list4.render(), state
+btn = Button("Load More", {'item_count': 0})
+card = Card()
+card.child("Items")
 
+@btn.click(target=card, swap="beforeend", bind=btn)
+def load_more(state: State) -> str: 
+    count = state.get('item_count')
+    count+=1
+    state.set('item_count', count)
+    return Item(f"Item number: {count}")
+
+app.add_children(
+    card, btn
+)
 
 app.build()
 if __name__ == '__main__':

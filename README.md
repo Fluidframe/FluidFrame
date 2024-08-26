@@ -11,8 +11,6 @@ FluidFrame is a powerful, pythonic web application framework that embraces the s
 
 - **Hypermedia-Driven**: Utilizes HTMX to implement Hypermedia as the Engine of Application State (HATEOAS), allowing the server to control the flow of information and interactions.
 
-- **Component-Based Architecture**: Build your UI with reusable, Python-defined components, promoting code organization and reusability.
-
 - **Pythonic HTML Generation**: Create HTML structures using Python syntax, making your code more consistent and easier to maintain.
 
 ```python
@@ -25,6 +23,54 @@ content = html(
     )
 )
 ```
+
+- **Component-Based Architecture**: Build your UI with reusable, Python-defined components, promoting code organization and reusability.
+
+```python
+from fluidframe.core import p, button, div, h2
+from fluidframe.core import FluidFrame, Component, State
+
+class Button(Component):
+    def __init__(self, label: str, state:dict=None) -> None:
+        super().__init__()
+        self.label = label
+        if state:
+            self.use_state(state)
+
+    def render(self) -> str:
+        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg", state=self.add_state())
+
+class Card(Component):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def render(self) -> str:
+        return div(
+            [child.render() if isinstance(child, Component) else child for child in self.children],
+            id=self.id, cls="max-w-md mx-auto mt-20 p-10 shadow-lg rounded-lg flex flex-col items-center justify-center space-y-5 bg-white/10 backdrop-blur-md border border-white/20"
+        )
+
+class Header(Component):
+    def __init__(self, body: str) -> None:
+        super().__init__()
+        self.count = 0
+        self.body = body
+        self.text_id = f"{self.id}-text"
+        self.use_state(include='count')
+        
+    def render(self) -> str:
+        return div(
+            h2(self.body, id=self.text_id, cls="text-4xl text-gray-900 font-bold dark:text-white"),
+            id=self.id, cls="relative", state=self.add_state()
+        )
+
+
+card = Card()
+header = Header("The count is 0")
+increment_btn = Button("Increment")
+decrement_btn = Button("Decrement")
+```
+
 - **Automatic Route Generation**: Simplify your development process with automatic route generation for HTMX-enabled components.
 - **Full-Stack Python**: Develop entire web applications using Python, from backend logic to frontend interactions, without writing JavaScript or HTML.
 - **High Performance**: Utilizes Cython for core HTML tag generation, offering speed comparable to or faster than traditional templating engines like Jinja2.
@@ -85,34 +131,70 @@ class Button(Component):
 ```python
 import uvicorn
 from fluidframe.core import FluidFrame, Component
-from fluidframe.components.text_components import Header
-from fluidframe.components.action_components import Button
 
 app = FluidFrame(dev_mode=False)
 
-n=0
-header = Header("Here we show a dynamic number", help="This will change when the button is clicked")
+class Button(Component):
+    def __init__(self, label: str, state:dict=None) -> None:
+        super().__init__()
+        self.label = label
+        if state:
+            self.use_state(state)
 
+    def render(self) -> str:
+        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg", state=self.add_state())
+
+class Card(Component):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def render(self) -> str:
+        return div(
+            [child.render() if isinstance(child, Component) else child for child in self.children],
+            id=self.id, cls="max-w-md mx-auto mt-20 p-10 shadow-lg rounded-lg flex flex-col items-center justify-center space-y-5 bg-white/10 backdrop-blur-md border border-white/20"
+        )
+
+class Header(Component):
+    def __init__(self, body: str, state: dict) -> None:
+        super().__init__()
+        self.body = body
+        self.text_id = f"{self.id}-text"
+        self.use_state(state, include='count')
+        
+    def render(self) -> str:
+        return div(
+            h2(self.body, id=self.text_id, cls="text-4xl text-gray-900 font-bold dark:text-white"),
+            id=self.id, cls="relative", state=self.add_state()
+        )
+
+card = Card()
+header = Header("The count is 0", state={'count': 0})
 increment_btn = Button("Increment")
-@increment_btn.on_event(trigger="click", target=header, action="innerHTML", transition=True, cache=False)
-def increment() -> str:
-    global n, header
-    n+=1
-    header.body=f"You have clicked the button to increment {n}"
-    return header.render()
-
 decrement_btn = Button("Decrement")
-@decrement_btn.on_event(trigger="click", target=header, action="innerHTML", transition=True, cache=False)
-def decrement() -> str:
-    global n, header
-    n-=1         
-    header.body=f"You have clicked the button to decrement {n}"
-    return header.render()
+
+@increment_btn.click(swap="textContent", target=header.text_id, bind=header)
+def increment(state: State) -> str:
+    count = state.get('count')
+    count-=1
+    state.set('count', count)
+    return f"The count is {count}"
 
 
-app.child(increment_btn)
-app.child(header)
-app.child(decrement_btn)
+@decrement_btn.click(swap="textContent", target=header.text_id, bind=header)
+def decrement(state: State) -> str:
+    count = state.get('count')
+    count+=1
+    state.set('count', count)
+    return f"The count is {count}"
+
+
+app.add_children(
+    card.add_children(
+        increment_btn, 
+        header, 
+        decrement_btn
+    )
+)
 
 app.build()
 if __name__ == '__main__':
@@ -125,38 +207,68 @@ if __name__ == '__main__':
 ```python
 import uvicorn
 from fluidframe.core import FluidFrame, Component
-from fluidframe.components.text_components import Header
-from fluidframe.components.action_components import Button
 
 btn = app.child(Button("Load More"))
 
-# A quick component
+# A quick component #
 class Item(Component):
     def __init__(self, text: str) -> None:
         super().__init__()
         self.text = text
     
     def render(self) -> str:
-        return p(self.text, id=self.id, cls="m-5 border border-gray-300 p-5 text-center rounded-lg shadow-lg")   
+        return p(self.text, cls="m-5 border border-gray-300 p-5 text-center rounded-lg shadow-lg", id=self.id)
+       
+class Button(Component):
+    def __init__(self, label: str, state:dict=None) -> None:
+        super().__init__()
+        self.label = label
+        if state:
+            self.use_state(state)
+
+    def render(self) -> str:
+        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg", state=self.add_state())
+
+class Card(Component):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def render(self) -> str:
+        return div(
+            [child.render() if isinstance(child, Component) else child for child in self.children],
+            id=self.id, cls="max-w-md mx-auto mt-20 p-10 shadow-lg rounded-lg flex flex-col items-center justify-center space-y-5 bg-white/10 backdrop-blur-md border border-white/20"
+        )
        
 
-t1 = app.child(Item("Loaded Section"))
-t2 = app.child(Item("Loaded Section")) 
+btn = Button("Load More", {'item_count': 0})
+card = Card()
+card.child("Items")
 
-@btn.on_event(trigger="click", target=[t1, t2], action="outerHTML", cache=False, transition=True)
-def load_more() -> str:   
-    return t1.render() + t2.render()
+@btn.click(target=card, swap="beforeend", bind=btn)
+def load_more(state: State) -> str: 
+    count = state.get('item_count')
+    count+=1
+    state.set('item_count', count)
+    return Item(f"Item number: {count}")
+
+app.add_children(
+    card, btn
+)
 
 app.build()
 if __name__ == '__main__':
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("app:app", host="127.0.0.1", port=8080, reload=True)
 ```
 
 ---
 
 ## Developments
 
-- FluidFrame utilizes a Cython implementation for HTML tags, resulting in a speed boost for small scale template rendering when compared to Jinja2.
+- `Aug 26, 2024`: Added support for state management of components. Fluidframe components stores the state in client side and the state updates are controlled by the server side along with htmx response modifiers to modify HTMX behaviours and client side event triggering controls. 
+
+- `Aug 9, 2024`: Automatic client side dependency management. Dependency scripts and styles in Fluidframe applications are loaded on demand based or requirement of a component. This drastically reduces initial load times because only the necessary scripts and styles are loaded and further scripts are loaded depending on mounting of new components. Once loaded they are not needed to be loaded again as they persist in local storage. (Currently tailwind's generated css is completly passed to the client, we need to make something similar to purge css to only extract the required style content to be passed to the client)
+
+- `Aug 7, 2024` FluidFrame utilizes a Cython implementation for HTML tags, resulting in a speed boost for small scale template rendering when compared to Jinja2.
 
     In a performance test involving 1,000,000 iterations, FluidFrame's tag rendering was approximately 9.58 times faster than Jinja2 at small scale rendering.
 
@@ -167,7 +279,7 @@ if __name__ == '__main__':
     This speed advantage can be crucial for our specific case of htmx response rendering as the scale and depth of required html will be smaller.
 
     At the same time when child elements are higher to loop through (>10000) Jinja2 is consistently faster. But since we are using HTMX and its support for server sent events allow us to sent the data dynamically as its been generated and rendered there by closing the gap.
-
+    
 ---
 
 ## Why FluidFrame?

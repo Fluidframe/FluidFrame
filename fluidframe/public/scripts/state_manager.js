@@ -39,27 +39,21 @@
         }
     };
 
-    const cleanupStateStore = function() {
-        for (const id in stateStore) {
-            if (!document.getElementById(id)) {
-                delete stateStore[id];
-                delete bindingStore[id];
-            }
+    const cleanupStateStore = function(id) {
+        if (id) {
+            delete stateStore[id];
+            delete bindingStore[id];
         }
     };
 
     const initializeEventListeners = function() {
         document.body.addEventListener('htmx:afterSettle', (event) => {
             updateStateStore(event.detail.elt);
-            cleanupStateStore();
         });
 
         document.body.addEventListener('htmx:beforeCleanupElement', (event) => {
             const {id} = event.detail.elt;
-            if (id) {
-                delete stateStore[id];
-                delete bindingStore[id];
-            }
+            cleanupStateStore(id);
         });
 
         document.body.addEventListener('htmx:configRequest', (event) => {
@@ -89,8 +83,34 @@
         });
 
         document.body.addEventListener('htmx:beforeOnLoad', (event) => {
-            const {xhr} = event.detail;
+            const {xhr, elt} = event.detail;
+            const newTarget = xhr.getResponseHeader('HX-Target-Update');
             const newState = xhr.getResponseHeader('X-Component-State');
+            if (newTarget) {
+                try {
+                    const targetMapping = JSON.parse(newTarget);
+                    if (typeof targetMapping === 'object' && targetMapping !== null) {
+                        // Get the current hx-target attribute value
+                        let currentTargets = elt.getAttribute('hx-target');
+                        if (currentTargets) {
+                            // Split the current hx-target value into individual targets
+                            let targetList = currentTargets.split(' ');
+        
+                            // Update only the specified targets based on the JSON mapping
+                            targetList = targetList.map(target => {
+                                const strippedTarget = target.startsWith('#') ? target.substring(1) : target;
+                                return targetMapping[strippedTarget] ? `#${targetMapping[strippedTarget]}` : target;
+                            });
+        
+                            // Join the updated targets back into a single string and set it
+                            elt.setAttribute('hx-target', targetList.join(' '));
+                            console.log(`hx-target updated to: ${targetList.join(' ')}`);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing HX-Retarget header as JSON:', e);
+                }
+            }
             if (newState) {
                 try {
                     const parsedState = JSON.parse(newState);
@@ -122,7 +142,7 @@
             }
         });
 
-        setInterval(cleanupStateStore, 60000);
+        // setInterval(cleanupStateStore, 60000);
     };
 
     if (document.readyState === 'loading') {
