@@ -267,18 +267,6 @@ if __name__ == '__main__':
 - `Aug 26, 2024`: Added support for state management of components. Fluidframe components stores the state in client side and the state updates are controlled by the server side along with htmx response modifiers to modify HTMX behaviours and client side event triggering controls. 
 
 - `Aug 9, 2024`: Automatic client side dependency management. Dependency scripts and styles in Fluidframe applications are loaded on demand based or requirement of a component. This drastically reduces initial load times because only the necessary scripts and styles are loaded and further scripts are loaded depending on mounting of new components. Once loaded they are not needed to be loaded again as they persist in local storage. (Currently tailwind's generated css is completly passed to the client, we need to make something similar to purge css to only extract the required style content to be passed to the client)
-
-- `Aug 7, 2024` FluidFrame utilizes a Cython implementation for HTML tags, resulting in a speed boost for small scale template rendering when compared to Jinja2.
-
-    In a performance test involving 1,000,000 iterations, FluidFrame's tag rendering was approximately 9.58 times faster than Jinja2 at small scale rendering.
-
-    | Iterations | fluidframe tags | jinja2 |
-    |---|---|---|
-    1,000,000|0.7361083286003123s|7.126994657999967s|
-
-    This speed advantage can be crucial for our specific case of htmx response rendering as the scale and depth of required html will be smaller.
-
-    At the same time when child elements are higher to loop through (>10000) Jinja2 is consistently faster. But since we are using HTMX and its support for server sent events allow us to sent the data dynamically as its been generated and rendered there by closing the gap.
     
 ---
 
