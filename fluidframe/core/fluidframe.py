@@ -1,4 +1,4 @@
-import inspect, json
+import inspect, json, re
 from typing import Callable
 import json, inspect, html as HTML
 from abc import ABC, abstractmethod
@@ -9,12 +9,12 @@ from starlette.responses import HTMLResponse
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from fluidframe.core.dependency import requires
-from fluidframe.utilities.helper import generate_id
-from typing import Optional, Callable, Dict, List, Any
+from typing import Optional, Callable, Dict, List, Any, Set
 from starlette.middleware.sessions import SessionMiddleware
 from fluidframe.config import PUBLIC_DIR, HOT_RELOAD_SCRIPT
 from fluidframe.utilities.tailwind_utils import tailwind_build
 from starlette.websockets import WebSocketDisconnect, WebSocket
+from fluidframe.utilities.helper import generate_id, update_outer_div
 from fluidframe.core import html, body, meta, script, div, head, title, div
 
 
@@ -27,13 +27,14 @@ class StateRegistry:
     """
     def __init__(self) -> None:
         """Initialize a StateRegistry instance."""
-        self.id:                    str
-        self.type:                  str = self.__class__.__name__.lower()
-        self.state:                 Dict[str: Any] = {}
-        self._parent_:              Optional['Component'] = None
-        self.f_attributes:          Dict[str, Any] = {}
-        self._event_registry_:      Dict[str, Callable] = {}
-        self._state_bind_registry_: Dict[str, List[str]] = {}
+        self.id:                       str
+        self.type:                     str = self.__class__.__name__.lower()
+        self.state:                    Dict[str: Any] = dict()
+        self._parent_:                 Optional['Component'] = None
+        self.f_attributes:             Dict[str, Any] = dict()
+        self._event_registry_:         Dict[str, Callable] = dict()
+        self._hx_trigger_info_:        Dict[str, Any] = dict()
+        self._state_bind_registry_:    Dict[str, List[str]] = dict()
         
     def use_state(self, state: Optional[dict]=None, exclude: List[str]|str=None, include: List[str]|str=None) -> None:
         """
@@ -92,7 +93,8 @@ class StateRegistry:
                 idx+=1
             alias = f"{comp.type}{idx}" if idx > 0 else comp.type
             self._state_bind_registry_[route_path].append(alias)
-            bind_state[comp.id] = {'alias': alias, 'keys': list(comp.state.keys())}
+            # bind_state[comp.id] = {'alias': alias, 'keys': list(comp.state.keys())}
+            bind_state[comp.id] = {alias: list(comp.state.keys())}
         return HTML.escape(json.dumps(bind_state))
     
     def add_state(self) -> str:
@@ -104,35 +106,56 @@ class StateRegistry:
         """
         return HTML.escape(json.dumps(self.state))
         
-    def on_event(self, event: str, swap: str, target: Optional['Component'|List['Component']|str|List[str]]=None, bind: Optional['Component'|List['Component']]=None, use_transition: bool = True, use_cache: bool = False) -> Callable:
+    def on_event(self, event: str, swap: str, target: Optional['Component'|List['Component']|str|List[str]]=None, bind: Optional['Component'|List['Component']]=None, use_transition: bool = False) -> Callable:
         """
         Decorator for handling component events.
 
+        This method sets up HTMX-based event handling for a component. It configures the necessary attributes
+        and routing for the specified event.
+
         Args:
-            `event` (str): The event type (e.g., "click").
-            `swap` (str): The HTMX swap method.
+            `event` (str): The event type to handle (e.g., "click", "mouseenter", "mouseleave").
+            `swap` (str): The HTMX swap method. Determines how the response will be inserted into the DOM. Refer to the HTMX [documentation](https://htmx.org/attributes/hx-swap/#hx-swap) for more information.
+                
+                **Valid values are:**
+                - "innerHTML": Replace the inner HTML of the target element (default).
+                - "outerHTML": Replace the entire target element with the response.
+                - "textContent": Replace the text content of the target element, without parsing the response as HTML.
+                - "beforebegin": Insert the response before the target element.
+                - "afterbegin": Insert the response before the first child of the target element.
+                - "beforeend": Insert the response after the last child of the target element.
+                - "afterend": Insert the response after the target element.
+                - "delete": Delete the target element regardless of the response.
+                - "none": Do not append content from response (out-of-band items will still be processed).
+                
             `target` (Optional[Component|List[Component]|str|List[str]]): The target(s) for the HTMX update.
-            `bind` (Optional[Component|List[Component]]): Component(s) to bind state to.
-            `use_transition` (bool): Whether to use HTMX transitions.
-            `use_cache` (bool): Whether to cache the result of the event.
+                Can be a single Component, a list of Components, a string ID, or a list of string IDs.
+                If not specified, the current component is used as the target.
+            
+            `bind` (Optional[Component|List[Component]]): Component(s) whose state should be bound to this event.
+                This allows for automatic state synchronization between components.
+            
+            `use_transition` (bool): Whether to use HTMX transitions for the event. Only applicable for 'click' events currently due to flickering on other events. [Refer](https://htmx.org/attributes/hx-swap/#modifiers)
 
         Returns:
             Callable: A decorator for the event handler function.
+
+        Note:
+            This method internally sets up the necessary HTMX attributes and routing for the specified event.
+            It also handles the creation of target selectors and manages component state binding if specified.
         """
-        # NOTE: Currently only supports a single event to be binded to a component
         
+        target_ids = f"#{self.id}"
         route_path = f"/{self.id}/{event}"
-        self.f_attributes['hx-swap'] = swap
-        self.f_attributes['hx-trigger'] = event
-        self.f_attributes['hx-get'] = route_path
-        if use_cache:
-            self.f_attributes['hx-trigger'] += " once"
-        if use_transition:
-            self.f_attributes['hx-swap'] += " transition:true"
+        self._hx_trigger_info_[event] = dict()
+
+        if use_transition and event=='click':
+            swap = f"{swap} transition:true"
         if bind:
             self.f_attributes['bind-state'] = self.bind_state(route_path, bind)
         if self.state:
-            self.f_attributes['state'] = HTML.escape(json.dumps(self.state))
+            self.f_attributes['state'] = self.add_state()
+            
         if target:
             if isinstance(target, str):
                 target_ids = f"#{target}"
@@ -143,15 +166,30 @@ class StateRegistry:
                     target_ids = f"{', '.join([f'#{t}' for t in target])}"
                 else: 
                     target_ids =f"{', '.join([f'#{t.id}' for t in target])}"
-            self.f_attributes['hx-target'] = target_ids
+            
+        self._hx_trigger_info_[event]['swap'] = swap
+        self._hx_trigger_info_[event]['method'] = 'GET'
+        self._hx_trigger_info_[event]['path'] = route_path
+        self._hx_trigger_info_[event]['target'] = target_ids
+        
+        self.f_attributes['hx-trigger-info'] = HTML.escape(json.dumps(self._hx_trigger_info_))
         
         def decorator(func: Callable):
+            """
+            A decorator for event handlers that sets up the HTMX trigger
+            information and registers the route.
+
+            Args:
+                func (Callable): The event handler function to be decorated.
+
+            Returns:
+                Callable: The decorated event handler function.
+            """
             original_render = self.render
             def wrapped_render(*args, **kwargs) -> str:
                 rendered_content = original_render(*args, **kwargs)
-                rendered_content = rendered_content.replace(f'id="{self.id}"', "")
-                htmx_div = div(rendered_content, id=self.id, cls="block w-max p-0 m-0", **self.f_attributes)
-                return htmx_div
+                rendered_content = update_outer_div(rendered_content, self.f_attributes)
+                return rendered_content
             self.render = wrapped_render
 
             # Register the route
@@ -161,6 +199,27 @@ class StateRegistry:
 
             return func
         return decorator
+    
+    def _state_event_wrap_(self) -> Callable:
+        """
+        Internal wrapper to add state to components when rendered.
+
+        This method is used internally by FluidFrame to add the state to the component
+        when it is rendered. It is not intended to be used directly by the user.
+
+        If the component has state, it will be added to the component as an attribute
+        before rendering. The state will be added as a JSON-encoded string.
+        """
+        original_render = self.render
+        def wrapped_render(*args, **kwargs) -> str:
+            rendered_content = original_render(*args, **kwargs)
+            if self.state:
+                self.f_attributes['state'] = self.add_state()
+                rendered_content = update_outer_div(rendered_content, self.f_attributes)
+                return rendered_content
+            else:
+                return rendered_content
+        self.render = wrapped_render
     
     def render(self) -> str:
         """
@@ -211,9 +270,11 @@ class Component(StateRegistry, ABC):
         # Component without state #
         ###########################
         class SimpleButton(Component):
-            def __init__(self, label: str):
+            def __init__(self, label: str, state:dict|None=None):
                 super().__init__()
                 self.label = label
+                if state:
+                    self.use_state(state)
 
             def render(self) -> str:
                 return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 py-2 px-5")
@@ -222,10 +283,14 @@ class Component(StateRegistry, ABC):
         # Component with children #
         ###########################
         class Card(Component):
-            def __init__(self, title: str, children: List[Component] = []):
+            def __init__(self, title: str, children: List[Component]=None, state:dict|None=None):
                 super().__init__()
                 self.title = title
+                if children is None:
+                    children = []
                 self.children = children
+                if state:
+                    self.use_state(state)
 
             def render(self) -> str:
                 children_html = ''.join([child.render() for child in self.children])
@@ -246,51 +311,55 @@ class Component(StateRegistry, ABC):
                 self.use_state(include='count')
 
             def render(self) -> str:
-                return div(f"Count: {self.count}", id=self.id, state=self.add_state())'
+                return div(f"Count: {self.count}", id=self.id)'
 
         ###########################################
         # Component with state and event handling #
         ###########################################
         class Button(Component):
-            def __init__(self, label: str) -> None:
+            def __init__(self, label: str, state:dict=None) -> None:
                 super().__init__()
                 self.label = label
+                if state:
+                    self.use_state(state)
 
             def render(self) -> str:
-                return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg ")
+                return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg")
 
         class Header(Component):
-            def __init__(self, body: str) -> None:
+            def __init__(self, body: str, state:dict=None) -> None:
                 super().__init__()
-                self.count = 0
                 self.body = body
                 self.text_id = f"{self.id}-text"
-                self.use_state(include='count')
+                if state:
+                    self.use_state(state)
                 
             def render(self) -> str:
                 return div(
                     h2(self.body, id=self.text_id, cls="text-4xl text-gray-900 font-bold dark:text-white"),
-                    id=self.id, cls="relative", state=self.add_state()
+                    id=self.id
                 )
 
         # Creating instances
         app = FluidFrame()
-        header = Header("The count is 0")
         increment_btn = Button("Increment")
         decrement_btn = Button("Decrement")
+        header = Header("The count is 0", {'count': 0})
 
         # Binding click events
-        @increment_btn.click(swap="textContent", target=header.text_id, bind_state=header)
+        @increment_btn.click(swap="textContent", target=header.text_id, bind=header)
         def increment(state: State) -> str:
-            st = state.get_state()
-            state.set_state('count', st['count']+1)
-            return f"The count is {state.get('count')}"
+            count = state.get('count')
+            count+=1
+            state.set('count', count)
+            return f"The count is {count}"
 
-        @decrement_btn.click(swap="textContent", target=header.text_id, bind_state=header)
+        @decrement_btn.click(swap="textContent", target=header.text_id, bind=header)
         def decrement(state: State) -> str:
-            st = state.get_state()
-            state.set_state('count', st['count']-1)
-            return f"The count is {state.get('count')}"
+            count = state.get('count')
+            count-=1
+            state.set('count', count)
+            return f"The count is {count}"
             
         # The `click` decorator is used to bind click events to the increment and decrement buttons.
         # The `swap` parameter specifies that the text content of the target should be updated.
@@ -336,6 +405,7 @@ class Component(StateRegistry, ABC):
         if isinstance(component, Component):
             component.root = self.root
             component._parent_ = self
+            component._state_event_wrap_()
             self._event_registry_.update(component._event_registry_)
         self.children.append(component)
         return component
@@ -366,53 +436,79 @@ class Component(StateRegistry, ABC):
         """
         pass
     
-    def click(self, swap: str, target: Optional['Component'|List['Component']|str|List[str]]=None, bind: Optional['Component'|List['Component']]=None, use_transition: bool = True, use_cache: bool = False) -> Callable:
+    def click(self, swap: str, target: Optional['Component'|List['Component']|str|List[str]]=None, bind: Optional['Component'|List['Component']]=None, use_transition: bool = False) -> Callable:
         """
-        Convenience method for binding `click` event to the component.
+        Convenience method for binding a 'click' event to the component.
+
+        This method is a shorthand for `on_event` with the event type set to "click".
 
         Args:
-            `swap` (str): The HTMX swap method.
+            `swap` (str): The HTMX swap method. See `on_event` for valid values and descriptions.
             `target` (Optional[Component|List[Component]|str|List[str]]): The target(s) for the HTMX update.
-            `bind` (Optional[Component|List[Component]]): Component(s) to bind state to.
-            `use_transition` (bool): Whether to use HTMX transitions.
-            `use_cache` (bool): Whether to cache the result of the event.
+                See `on_event` for details.
+            `bind` (Optional[Component|List[Component]]): Component(s) whose state should be bound to this event.
+            `use_transition` (bool): Whether to use HTMX transitions for the click event.
 
         Returns:
             Callable: A decorator for the click event handler function.
+
+        Example:
+            ```python
+            @component.click(swap="innerHTML", target=header, use_transition=True)
+            def handle_click():
+                return "Button clicked!"
+            ```
         """
-        return self.on_event("click", swap, target, bind, use_transition, use_cache) 
+
+        return self.on_event("click", swap, target, bind, use_transition) 
     
-    def mouseenter(self, swap: str, target: Optional['Component'|List['Component']|str|List[str]]=None, bind: Optional['Component'|List['Component']]=None, use_transition: bool = True, use_cache: bool = False) -> Callable:
+    def mouseenter(self, swap: str, target: Optional['Component'|List['Component']|str|List[str]]=None, bind: Optional['Component'|List['Component']]=None) -> Callable:
         """
-        Convenience method for binding `mouseenter` event to the component.
+        Convenience method for binding a 'mouseenter' event to the component.
+
+        This method is a shorthand for `on_event` with the event type set to "mouseenter".
 
         Args:
-            `swap` (str): The HTMX swap method.
+            `swap` (str): The HTMX swap method. See `on_event` for valid values and descriptions.
             `target` (Optional[Component|List[Component]|str|List[str]]): The target(s) for the HTMX update.
-            `bind` (Optional[Component|List[Component]]): Component(s) to bind state to.
-            `use_transition` (bool): Whether to use HTMX transitions.
-            `use_cache` (bool): Whether to cache the result of the event.
+                See `on_event` for details.
+            `bind` (Optional[Component|List[Component]]): Component(s) whose state should be bound to this event.
 
         Returns:
             Callable: A decorator for the mouseenter event handler function.
+
+        Example:
+            ```python
+            @component.mouseenter(swap="beforeend", target=mycomponent)
+            def handle_mouseenter():
+                return "<p>Mouse entered the component!</p>"
+            ```
         """
-        return self.on_event("mouseenter", swap, target, bind, use_transition, use_cache) 
+        return self.on_event("mouseenter", swap, target, bind, False) 
     
-    def mouseexit(self, swap: str, target: Optional['Component'|List['Component']|str|List[str]]=None, bind: Optional['Component'|List['Component']]=None, use_transition: bool = True, use_cache: bool = False) -> Callable:
+    def mouseleave(self, swap: str, target: Optional['Component'|List['Component']|str|List[str]]=None, bind: Optional['Component'|List['Component']]=None) -> Callable:
         """
-        Convenience method for binding `mouseexit` event to the component.
+        Convenience method for binding a 'mouseleave' event to the component.
+
+        This method is a shorthand for `on_event` with the event type set to "mouseleave".
 
         Args:
-            `swap` (str): The HTMX swap method.
+            `swap` (str): The HTMX swap method. See `on_event` for valid values and descriptions.
             `target` (Optional[Component|List[Component]|str|List[str]]): The target(s) for the HTMX update.
-            `bind` (Optional[Component|List[Component]]): Component(s) to bind state to.
-            `use_transition` (bool): Whether to use HTMX transitions.
-            `use_cache` (bool): Whether to cache the result of the event.
+                See `on_event` for details.
+            `bind` (Optional[Component|List[Component]]): Component(s) whose state should be bound to this event.
 
         Returns:
-            Callable: A decorator for the mouseexit event handler function.
+            Callable: A decorator for the mouseleave event handler function.
+
+        Example:
+            ```python
+            @component.mouseleave(swap="innerHTML", target=my_target_component)
+            def handle_mouseleave(self):
+                return ""  # Clear the hover info when mouse leaves
+            ```
         """
-        return self.on_event("mouseexit", swap, target, bind, use_transition, use_cache) 
+        return self.on_event("mouseleave", swap, target, bind, False) 
  
     
 
@@ -448,6 +544,7 @@ class FluidFrame(Starlette):
         if isinstance(component, Component):
             component.root = self
             component._parent_ = self
+            component._state_event_wrap_()
             self._event_registry_.update(component._event_registry_)
         self.children.append(component)
         return component

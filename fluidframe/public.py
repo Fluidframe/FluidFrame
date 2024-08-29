@@ -8,6 +8,7 @@ class _scripts:
     highlight_code_js: str = "scripts/highlight_code.js"
     hot_reload_js: str = "scripts/hot_reload.js"
     tooltip_js: str = "scripts/tooltip.js"
+    state_manager_js: str = "scripts/state_manager.js"
     copy_code_js: str = "scripts/copy_code.js"
 
     class _scripts_prismjs:

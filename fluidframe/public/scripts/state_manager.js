@@ -1,139 +1,190 @@
 (function() {
-    if (typeof window.fluidFrameStateStore === 'undefined') {
-        window.fluidFrameStateStore = {
-            states: {},
-            bindings: {}
+    const StateManager = {
+        states: {},
+        bindings: {},
+
+        getState: function(id, key) {
+            return this.states[id] && this.states[id][key];
+        },
+
+        setState: function(id, key, value) {
+            if (!this.states[id]) this.states[id] = {};
+            this.states[id][key] = value;
+        },
+
+        updateState: function(id, newState) {
+            if (!this.states[id]) this.states[id] = {};
+            Object.assign(this.states[id], newState);
+        },
+
+        getBindings: function(id) {
+            return this.bindings[id] || {};
+        },
+
+        setBindings: function(id, bindings) {
+            this.bindings[id] = bindings;
+        },
+
+        processStateAttribute: function(element) {
+            const state = element.getAttribute('state');
+            if (state) {
+                try {
+                    this.updateState(element.id, JSON.parse(state));
+                    element.removeAttribute('state');
+                } catch (e) {
+                    console.error('Error parsing state attribute:', e);
+                }
+            }
+        },
+
+        processBindStateAttribute: function(element) {
+            const bindState = element.getAttribute('bind-state');
+            if (bindState) {
+                try {
+                    this.setBindings(element.id, JSON.parse(bindState));
+                    element.removeAttribute('bind-state');
+                } catch (e) {
+                    console.error('Error parsing bind-state attribute:', e);
+                }
+            }
+        },
+
+        updateStateFromResponse: function(id, newState) {
+            this.updateState(id, newState);
+            const bindings = this.getBindings(id);
+            Object.entries(bindings).forEach(([targetId, bindInfo]) => {
+                const keys = bindInfo.keys || Object.keys(newState);
+                const boundState = {};
+                keys.forEach(key => {
+                    if (key in newState) {
+                        boundState[key] = newState[key];
+                    }
+                });
+                this.updateState(targetId, boundState);
+            });
+        }
+    };
+
+    function handleTriggerInfo(element) {
+        const triggerInfo = element.getAttribute('hx-trigger-info');
+        if (triggerInfo) {
+            try {
+                const triggers = JSON.parse(triggerInfo);
+                Object.entries(triggers).forEach(([eventType, config]) => {
+                    element.addEventListener(eventType, createEventHandler(element, config));
+                });
+                element.removeAttribute('hx-trigger-info');
+                
+            } catch (e) {
+                console.error('Error parsing hx-trigger-info attribute:', e);
+            }
+        }
+    }
+
+    function createEventHandler(element, config) {
+        return function(event) {
+            event.preventDefault();
+            const detail = {
+                elt: element,
+                event: event,
+                path: config.path|| element.getAttribute('hx-get'),
+                target: config.target || element.getAttribute('hx-target'),
+                swap: config.swap || element.getAttribute('hx-swap'),
+                params: config.params || {},
+                headers: config.headers || {},
+                values: config.values || {},
+                method: config.method || 'GET'
+            };
+
+            if (!htmx.trigger(element, 'htmx:configRequest', detail).defaultPrevented) {
+                if (!htmx.trigger(element, 'htmx:beforeRequest', detail).defaultPrevented) {
+                    if (!htmx.trigger(element, 'htmx:beforeSend', detail).defaultPrevented) {
+                        htmx.ajax(detail.method, detail.path, detail);
+                    }
+                }
+            }
         };
     }
 
-    const stateStore = window.fluidFrameStateStore.states;
-    const bindingStore = window.fluidFrameStateStore.bindings;
+    function processNewElements(elements) {
+        // Ensure elements is always an array
+        const elementsArray = Array.from(elements);
 
-    const updateStateStore = function(element) {
-        const {id} = element;
-        const state = element.getAttribute('state');
-        const bindState = element.getAttribute('bind-state');
-        
-        if (state) {
-            try {
-                stateStore[id] = JSON.parse(state);
-                element.removeAttribute('state');
-            } catch (e) {
-                console.error('Error parsing state attribute:', e);
+        elementsArray.forEach(node => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.id) {
+                    StateManager.processStateAttribute(node);
+                    StateManager.processBindStateAttribute(node);
+                    handleTriggerInfo(node);
+                }
+                processNewElements(node.children);
             }
-        }
-        
-        if (bindState) {
-            try {
-                const bindRelations = JSON.parse(bindState);
-                for (const [targetId, bindInfo] of Object.entries(bindRelations)) {
-                    if (!bindingStore[id]) {
-                        bindingStore[id] = {};
+        });
+    }
+
+    function setupObserver() {
+        if (!window.fluidFrameObserver) {
+            window.fluidFrameObserver = new MutationObserver(mutations => {
+                mutations.forEach(mutation => {
+                    if (mutation.type === 'childList') {
+                        processNewElements(mutation.addedNodes);
+                    } else if (mutation.type === 'attributes') {
+                        const { target, attributeName } = mutation;
+                        if (target.id) {
+                            if (attributeName === 'state') StateManager.processStateAttribute(target);
+                            else if (attributeName === 'bind-state') StateManager.processBindStateAttribute(target);
+                            else if (attributeName === 'hx-trigger-info') handleTriggerInfo(target);
+                        }
                     }
-                    bindingStore[id][targetId] = bindInfo;
-                }
-                element.removeAttribute('bind-state');
-            } catch (e) {
-                console.error('Error parsing bind-state attribute:', e);
-            }
+                });
+            });
+
+            window.fluidFrameObserver.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['state', 'bind-state', 'hx-trigger-info']
+            });
         }
-    };
+    }
 
-    const cleanupStateStore = function(id) {
-        if (id) {
-            delete stateStore[id];
-            delete bindingStore[id];
-        }
-    };
-
-    const initializeEventListeners = function() {
-        document.body.addEventListener('htmx:afterSettle', (event) => {
-            updateStateStore(event.detail.elt);
-        });
-
-        document.body.addEventListener('htmx:beforeCleanupElement', (event) => {
-            const {id} = event.detail.elt;
-            cleanupStateStore(id);
-        });
-
-        document.body.addEventListener('htmx:configRequest', (event) => {
-            const {elt} = event.detail;
-            const {id} = elt;
-            if (id) {
-                let requestState = {};
-                if (stateStore[id]) {
-                    requestState = {...stateStore[id]};
-                }
-                if (bindingStore[id]) {
-                    for (const [targetId, bindInfo] of Object.entries(bindingStore[id])) {
-                        if (stateStore[targetId]) {
-                            const keys = bindInfo.keys || Object.keys(stateStore[targetId]);
-                            for (const key of keys) {
-                                if (key in stateStore[targetId]) {
-                                    requestState[key] = stateStore[targetId][key];
-                                }
+    function initializeEventListeners() {
+        document.body.addEventListener('htmx:configRequest', event => {
+            const { elt, headers } = event.detail;
+            if (elt.id) {
+                const state = { ...StateManager.states[elt.id] };
+                const bindings = StateManager.getBindings(elt.id);
+                Object.entries(bindings).forEach(([targetId, bindInfo]) => {
+                    const targetState = StateManager.states[targetId];
+                    if (targetState) {
+                        const keys = bindInfo.keys || Object.keys(targetState);
+                        keys.forEach(key => {
+                            if (key in targetState) {
+                                state[`${key}`] = targetState[key];
                             }
-                        }
+                        });
                     }
-                }
-                if (Object.keys(requestState).length > 0) {
-                    event.detail.headers['X-Component-State'] = JSON.stringify(requestState);
+                });
+                if (Object.keys(state).length > 0) {
+                    headers['X-Component-State'] = JSON.stringify(state);
+                    headers['HX-Trigger'] = elt.id;
                 }
             }
         });
 
-        document.body.addEventListener('htmx:beforeOnLoad', (event) => {
-            const {xhr, elt} = event.detail;
-            const newTarget = xhr.getResponseHeader('HX-Target-Update');
+        document.body.addEventListener('htmx:beforeOnLoad', event => {
+            const { xhr, elt } = event.detail;
             const newState = xhr.getResponseHeader('X-Component-State');
-            if (newTarget) {
-                try {
-                    const targetMapping = JSON.parse(newTarget);
-                    if (typeof targetMapping === 'object' && targetMapping !== null) {
-                        // Get the current hx-target attribute value
-                        let currentTargets = elt.getAttribute('hx-target');
-                        if (currentTargets) {
-                            // Split the current hx-target value into individual targets
-                            let targetList = currentTargets.split(' ');
-        
-                            // Update only the specified targets based on the JSON mapping
-                            targetList = targetList.map(target => {
-                                const strippedTarget = target.startsWith('#') ? target.substring(1) : target;
-                                return targetMapping[strippedTarget] ? `#${targetMapping[strippedTarget]}` : target;
-                            });
-        
-                            // Join the updated targets back into a single string and set it
-                            elt.setAttribute('hx-target', targetList.join(' '));
-                            console.log(`hx-target updated to: ${targetList.join(' ')}`);
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error parsing HX-Retarget header as JSON:', e);
-                }
-            }
+            const id = xhr.getResponseHeader('HX-Trigger-Id');
             if (newState) {
                 try {
                     const parsedState = JSON.parse(newState);
                     if (Object.keys(parsedState).length > 0) {
-                        const {id} = event.detail.elt;
-                        if (stateStore[id]) {
-                            Object.assign(stateStore[id], parsedState);
+                        if (id) {
+                            StateManager.updateStateFromResponse(id, parsedState);
+                            console.log(`Updated state for ${id}:`, StateManager.states[id]);
                         } else {
-                            stateStore[id] = parsedState;
-                        }
-                        
-                        // Update bound states
-                        if (bindingStore[id]) {
-                            for (const [targetId, bindInfo] of Object.entries(bindingStore[id])) {
-                                if (stateStore[targetId]) {
-                                    const keys = bindInfo.keys || Object.keys(parsedState);
-                                    for (const key of keys) {
-                                        if (key in parsedState) {
-                                            stateStore[targetId][key] = parsedState[key];
-                                        }
-                                    }
-                                }
-                            }
+                            console.warn('No id found for element, state update skipped');
                         }
                     }
                 } catch (e) {
@@ -142,19 +193,24 @@
             }
         });
 
-        // setInterval(cleanupStateStore, 60000);
-    };
+        setupObserver();
+    }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('[state], [bind-state]').forEach(updateStateStore);
-            initializeEventListeners();
-        });
-    } else {
-        document.querySelectorAll('[state], [bind-state]').forEach(updateStateStore);
+    function initialize() {
+        processNewElements([document.body]);
         initializeEventListeners();
     }
 
-    console.log('Initial stateStore:', stateStore);
-    console.log('Initial bindingStore:', bindingStore);
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+        initialize();
+    }
+
+    // Expose API
+    window.FluidFrameState = StateManager;
+
+    console.log('Initial states:', StateManager.states);
+    console.log('Initial bindings:', StateManager.bindings);
 })();

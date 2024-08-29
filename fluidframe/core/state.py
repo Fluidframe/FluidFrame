@@ -37,8 +37,8 @@ class State:
     def get_trigger(self) -> str|None:
         return self._hx_req_info_.get("trigger", None)
     
-    def get_target(self) -> Dict[str, str]:
-        return self._hx_req_info_.get("target", {})
+    def get_target(self) -> str:
+        return ''.join(self._hx_req_info_.get("target", []))
     
     def reswap(self, swap: str) -> str:
         self._hx_modifier_['HX-Reswap'] = swap
@@ -72,8 +72,9 @@ class State:
     def get_response_modifier(self) -> Dict[str, Any]|None:
         modifier = {}
         if self._hx_modifier_:
-            modifier={k: json.dumps(v) for k, v in self._hx_modifier_.items()}
+            modifier.update({k: json.dumps(v) for k, v in self._hx_modifier_.items()})
         if self._state_:
             modifier['X-Component-State'] = json.dumps(self._state_)
+            modifier['HX-Trigger-Id'] = self.get_trigger()
         return modifier if modifier else None
         

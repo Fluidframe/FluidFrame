@@ -28,6 +28,28 @@ def prettify(html: str) -> str:
     html_string = '\n'.join(' ' * (len(line) - len(line.lstrip())) * 2 + line.lstrip() for line in lines)
     return re.sub(r'\n\s*\n', '\n\n', html_string)
 
+def check_if_html(text: str) -> bool:
+    html_pattern = r'<[a-z]+(?:\s+[a-z-]+(?:=(?:"[^"]*"|\'[^\']*\'))?)*\s*(?:/>|>[^<]*</[a-z]+>|>(?:(?!<[a-z]+).)*</[a-z]+>)'
+    if re.search(html_pattern, text, re.IGNORECASE | re.DOTALL):
+        return True
+    else:
+        return False
+    
+def remove_outer_div(html_string: str):
+    # Regex to match the outermost div tag and extract its contents
+    pattern = r'^<div[^>]*>(.*)</div>$'
+    if match := re.match(pattern, html_string, re.DOTALL):
+        return match[1].strip()
+    return html_string
+    
+def update_outer_div(html: str, attributes: dict):
+    new_string = []
+    for k, v in attributes.items():
+        new_string.append(f'{k}="{v}"')
+    input_string = ' '.join(new_string)
+    tag_split = html.split(">", maxsplit=1)
+    return f"{tag_split[0]} {input_string}>{''.join(tag_split[1:])}"
+
 def save_as_html(file_path, html_string):
     html_string=prettify(html_string)
     file_path=get_lib_path(file_path)
