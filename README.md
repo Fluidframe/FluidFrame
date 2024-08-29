@@ -38,11 +38,13 @@ class Button(Component):
             self.use_state(state)
 
     def render(self) -> str:
-        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg", state=self.add_state())
+        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg")
 
 class Card(Component):
-    def __init__(self) -> None:
+    def __init__(self, state:dict|None=None) -> None:
         super().__init__()
+        if state:
+            self.use_state(state)
 
     def render(self) -> str:
         return div(
@@ -61,7 +63,7 @@ class Header(Component):
     def render(self) -> str:
         return div(
             h2(self.body, id=self.text_id, cls="text-4xl text-gray-900 font-bold dark:text-white"),
-            id=self.id, cls="relative", state=self.add_state()
+            id=self.id, cls="relative"
         )
 
 
@@ -69,6 +71,14 @@ card = Card()
 header = Header("The count is 0")
 increment_btn = Button("Increment")
 decrement_btn = Button("Decrement")
+
+app.add_children(
+    card.add_children(
+        increment_btn,
+        header,
+        decrement_btn
+    )
+)
 ```
 
 - **Automatic Route Generation**: Simplify your development process with automatic route generation for HTMX-enabled components.
@@ -142,7 +152,7 @@ class Button(Component):
             self.use_state(state)
 
     def render(self) -> str:
-        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg", state=self.add_state())
+        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg")
 
 class Card(Component):
     def __init__(self) -> None:
@@ -164,7 +174,7 @@ class Header(Component):
     def render(self) -> str:
         return div(
             h2(self.body, id=self.text_id, cls="text-4xl text-gray-900 font-bold dark:text-white"),
-            id=self.id, cls="relative", state=self.add_state()
+            id=self.id, cls="relative"
         )
 
 card = Card()
@@ -208,43 +218,36 @@ if __name__ == '__main__':
 import uvicorn
 from fluidframe.core import FluidFrame, Component
 
-btn = app.child(Button("Load More"))
-
-# A quick component #
 class Item(Component):
-    def __init__(self, text: str) -> None:
+    def __init__(self, text: str, state:dict=None) -> None:
         super().__init__()
         self.text = text
+        if state:
+            self.use_state(state)
     
     def render(self) -> str:
-        return p(self.text, cls="m-5 border border-gray-300 p-5 text-center rounded-lg shadow-lg", id=self.id)
-       
-class Button(Component):
-    def __init__(self, label: str, state:dict=None) -> None:
+        return p(self.text, id=self.id, cls="m-5 border border-gray-300 p-5 text-center rounded-lg shadow-lg")
+
+class Card(Component):
+    def __init__(self, state:dict=None) -> None:
         super().__init__()
-        self.label = label
         if state:
             self.use_state(state)
 
     def render(self) -> str:
-        return button(self.label, id=self.id, cls="bg-blue-500 text-xl m-5 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg", state=self.add_state())
-
-class Card(Component):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def render(self) -> str:
         return div(
             [child.render() if isinstance(child, Component) else child for child in self.children],
-            id=self.id, cls="max-w-md mx-auto mt-20 p-10 shadow-lg rounded-lg flex flex-col items-center justify-center space-y-5 bg-white/10 backdrop-blur-md border border-white/20"
+            id=self.id, cls="max-w-lg mx-auto mt-20 p-10 shadow-lg rounded-lg flex flex-col items-center justify-center space-y-5 bg-white/10 backdrop-blur-md border border-white/20"
         )
-       
 
-btn = Button("Load More", {'item_count': 0})
-card = Card()
-card.child("Items")
+btn = Button("Load More")
+card2 = Card()
+card3 = Card()
+item = Item(f"Item number: 1", {'item_count': 1})
+card3.child(item)
 
-@btn.click(target=card, swap="beforeend", bind=btn)
+
+@btn.click(target=card3, swap="beforeend", bind=item)
 def load_more(state: State) -> str: 
     count = state.get('item_count')
     count+=1
@@ -252,17 +255,23 @@ def load_more(state: State) -> str:
     return Item(f"Item number: {count}")
 
 app.add_children(
-    card, btn
+    card2.add_children(
+        Header("Items"),
+        card3,
+        btn,
+    )
 )
 
 app.build()
 if __name__ == '__main__':
-    uvicorn.run("app:app", host="127.0.0.1", port=8080, reload=True)
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
 ```
 
 ---
 
 ## Developments
+
+- `Aug 29, 2024`: Added multiple event trigger binding onto any fluidframe components. This required us to make a custom attribute to programatically set the event listeners to trigger htmx ajax calls. We use `hx-trigger-info` tag with an html escaped json string which will have necessary htmx related informations per trigger event to set the event listeners.
 
 - `Aug 26, 2024`: Added support for state management of components. Fluidframe components stores the state in client side and the state updates are controlled by the server side along with htmx response modifiers to modify HTMX behaviours and client side event triggering controls. 
 
@@ -332,11 +341,6 @@ If you see "Installation successful!" printed without any errors, the installati
 
 ---
 
-## Components
-The following sample components will be available, but its easy to make your own on the fly
-`Text`, `Markdown`, `Latex`, `Title`, `Header`, `SubHeader`, `Caption`, `Code`, `Image`, `Audio`, `Video`, `Diagram`, `Button`, `TextInput`, `TextArea`, `Slider`, `SelectBox`, `MultiSelectBox`, `CheckBox`, `Radio`, `DateInput`, `TimeInput`, `FileUploader`, `ColorPicker()`, `DownloadButton`, `Progress`, `Spinner`, `Status`, `Form`, `Column`, `Container`, `SideBar`, `Expander`, `Empty`, `NavBar`
-
-
 > **For seeing sample usage check out the example in [`app.py`](./app.py)**
 
 **Note**: 
@@ -345,6 +349,6 @@ The following sample components will be available, but its easy to make your own
 
 ## Future Directions
 
-- Adding bidirectional state management
-- Inlineuse of predefined scripts without messing with browser contant policy
 - Using [`Robyn`](https://github.com/sparckles/Robyn) as the webframework backend along with optimised rendering codes written in Rust
+- **FluidPack** A component library extension having fluidframe custom components. The following sample components will be available shortly: `Text`, `Markdown`, `Latex`, `Title`, `Header`, `SubHeader`, `Caption`, `Code`, `Image`, `Audio`, `Video`, `Diagram`, `Button`, `TextInput`, `TextArea`, `Slider`, `SelectBox`, `MultiSelectBox`, `CheckBox`, `Radio`, `DateInput`, `TimeInput`, `FileUploader`, `ColorPicker()`, `DownloadButton`, `Progress`, `Spinner`, `Status`, `Form`, `Column`, `Container`, `SideBar`, `Expander`, `Empty`, `NavBar`.
+- A `streamlit`'s component API like extension using fluidframe. 
