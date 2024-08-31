@@ -300,5 +300,6 @@ index.html
 tailwind.config.js
 src/
 fluidpack/
+fluidbuild/
 node_modules.json
 app.py

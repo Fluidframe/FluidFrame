@@ -1,7 +1,7 @@
 import os
 import subprocess, json
+from fluidframe.config import FLUIDFRAME_BUILD_DIR, FLUIDFRAME_SRC_DIR
 from fluidframe.utilities.tailwind_utils import generate_tailwind_config
-from fluidframe.config import FLUIDFRAME_BUILD_DIR, FLUIDFRAME_SCRIPTS_DIR
 from fluidframe.utilities.boilerplate import generate_fluidframe_boilerplate, generate_fluidframe_component_boilerplate
 
 
@@ -54,20 +54,22 @@ def init_project(args):
     """
     project_name = args.project_name
     current_dir = os.getcwd()
-    src_dir = os.path.join(current_dir, FLUIDFRAME_SCRIPTS_DIR)
+    
+    src_dir = os.path.join(current_dir, FLUIDFRAME_SRC_DIR)
     fluidframe_dir = os.path.join(current_dir, FLUIDFRAME_BUILD_DIR)
 
     print(f"Initializing FluidFrame project: {project_name}")
 
-    # Create fluidframe directory if it doesn't exist
+    # Create fluidbuil directory if it doesn't exist
     os.makedirs(fluidframe_dir, exist_ok=True)
         
     # Create src directory if it doesn't exist
     os.makedirs(src_dir, exist_ok=True)
     
+    
     # Create fluidframe boilerplate file
-    generate_fluidframe_boilerplate(current_dir)
-    generate_fluidframe_component_boilerplate(fluidframe_dir)
+    generate_fluidframe_boilerplate(src_dir)
+    generate_fluidframe_component_boilerplate(src_dir)
 
     # Create fresh package.json for the user's project
     create_fresh_package_json(project_name, fluidframe_dir)

@@ -1,25 +1,10 @@
 import json
 import hashlib, re
 from uuid import uuid4
-from typing import List
 from bs4 import BeautifulSoup
-from markdown_it import MarkdownIt
-from fluidframe.utils import get_lib_path
-from mdit_py_plugins.anchors import anchors_plugin
-from mdit_py_plugins.footnote import footnote_plugin
-from mdit_py_plugins.tasklists import tasklists_plugin
-from mdit_py_plugins.front_matter import front_matter_plugin
+from fluidframe.config import get_lib_path
 
 
-
-MARKDOWNER = None
-
-def markdown_to_html(markdown_text: str) -> str:
-    global MARKDOWNER
-    if MARKDOWNER is None:
-        MARKDOWNER = MarkdownIt('commonmark', {'linkify': True, 'break': True, 'html': True})
-        MARKDOWNER = MARKDOWNER.use(footnote_plugin).use(front_matter_plugin).use(anchors_plugin).use(tasklists_plugin).enable('table')
-    return MARKDOWNER.render(markdown_text)
 
 def prettify(html: str) -> str:
     soup = BeautifulSoup(html, 'html.parser')
