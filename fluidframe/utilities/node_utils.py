@@ -2,6 +2,7 @@ import os
 import subprocess, json
 from fluidframe.utilities.tailwind_utils import generate_tailwind_config
 from fluidframe.config import FLUIDFRAME_BUILD_DIR, FLUIDFRAME_SCRIPTS_DIR
+from fluidframe.utilities.boilerplate import generate_fluidframe_boilerplate, generate_fluidframe_component_boilerplate
 
 
 def check_node_installed():
@@ -63,17 +64,21 @@ def init_project(args):
         
     # Create src directory if it doesn't exist
     os.makedirs(src_dir, exist_ok=True)
+    
+    # Create fluidframe boilerplate file
+    generate_fluidframe_boilerplate(current_dir)
+    generate_fluidframe_component_boilerplate(fluidframe_dir)
 
     # Create fresh package.json for the user's project
     create_fresh_package_json(project_name, fluidframe_dir)
-
-    # Generate tailwind.config.js
-    generate_tailwind_config(fluidframe_dir)
 
     # Create input.css
     input_css_path = os.path.join(fluidframe_dir, 'input.css')
     with open(input_css_path, 'w') as f:
         f.write('@tailwind base;\n@tailwind components;\n@tailwind utilities;\n')
+        
+    # Generate tailwind.config.js
+    generate_tailwind_config(fluidframe_dir)
 
     # Change to fluidframe directory
     os.chdir(fluidframe_dir)
