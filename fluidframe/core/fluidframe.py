@@ -3,16 +3,18 @@ from typing import Callable
 from starlette.requests import Request
 from fluidframe.core.state import State
 from typing import Callable, Dict, List
+from fluidframe.config import PUBLIC_DIR
 from fluidframe.config import get_lib_path
 from starlette.responses import HTMLResponse
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from fluidframe.core.component import Component
 from fluidframe.core.dependency import requires
-from fluidframe.config import PUBLIC_DIR, HOT_RELOAD_SCRIPT
+from fluidframe.public import js_bundle as fluidframe_bundle
 from fluidframe.utilities.tailwind_utils import tailwind_build
+from fluidframe.utilities.package_manager import url_for_public
 from starlette.websockets import WebSocketDisconnect, WebSocket
-from fluidframe.core import html, body, meta, script, div, head, title, div
+from fluidframe.core import html, body, meta, script, div, head, title, div, link
 
 
 
@@ -66,11 +68,12 @@ class FluidFrame(Starlette):
         Args:
             `dev_mode` (bool): Whether to run the application in development mode.
         """
-        super().__init__()
+        super().__init__() 
         self.id:              str = "root"
         self.dev_mode:        bool = dev_mode
         self.children:        List[Component] = []
         self._route_registry: Dict[str, Callable] = {}
+        self._fluidbuild_dir: str|None = None
     
     def child(self, component: 'Component') -> 'Component':
         """
@@ -132,6 +135,9 @@ class FluidFrame(Starlette):
             self.child(component)
         return self
     
+    def mount_fluidbuild(self, fluidframe_dir: str) -> None:
+        self._fluidbuild_dir = fluidframe_dir
+    
     def render(self) -> str:
         """
         Render the entire application.
@@ -145,11 +151,10 @@ class FluidFrame(Starlette):
                     head(
                         title("Fluidframe App"),
                         meta(charset="UTF-8"),
-                        script(src="https://cdn.tailwindcss.com"),
-                        script(src=f"{PUBLIC_DIR}/scripts/state_manager.js"),
-                        script(src=f"{PUBLIC_DIR}/scripts/dependency_manager.js"),
-                        script(src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.2/htmx.min.js", async_=True),
-                        requires(HOT_RELOAD_SCRIPT) if self.dev_mode else ""
+                        link(href="fluidbuild/dist/output.css", rel="stylesheet"),
+                        script(src=url_for_public(fluidframe_bundle.scripts.fluidframe_bundle_js)),
+                        script(src=url_for_public(fluidframe_bundle.scripts.htmx_bundle_js), async_=True),
+                        requires(url_for_public(fluidframe_bundle.scripts.hot_reload_js)) if self.dev_mode else ""
                     ),
                     body(
                         div(
@@ -176,4 +181,10 @@ class FluidFrame(Starlette):
             self.add_websocket_route("/live-reload", self.hot_reload_socket)
         else:
             tailwind_build()
+        
+        if self._fluidbuild_dir is None:
+            print("Please use `app.mount_fluidbuild` method to mount your fluidbuild folder")
+        else:
+            self.mount("/fluidbuild", StaticFiles(directory=self._fluidbuild_dir))
+        
         self.mount(f'/{PUBLIC_DIR}', StaticFiles(directory=get_lib_path("public")))

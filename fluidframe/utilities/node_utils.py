@@ -1,5 +1,6 @@
 import os
 import subprocess, json
+from fluidframe.utilities.package_manager import generate_source_map
 from fluidframe.config import FLUIDFRAME_BUILD_DIR, FLUIDFRAME_SRC_DIR
 from fluidframe.utilities.tailwind_utils import generate_tailwind_config
 from fluidframe.utilities.boilerplate import generate_fluidframe_boilerplate, generate_fluidframe_component_boilerplate
@@ -105,6 +106,7 @@ def init_project(args):
     print(f"FluidFrame project '{project_name}' initialized successfully.")
     print("To build css with tailwind, run:")
     print(f"fluidframe build_tailwind")
+    generate_source_map(fluidframe_dir)
 
     # Change back to original directory
     os.chdir(current_dir)
@@ -140,4 +142,6 @@ def install(args):
     except subprocess.CalledProcessError as e:
         print(f"Error installing {package_name}: {e}")
         
+    generate_source_map(fluidframe_dir)
+    
     os.chdir(os.getcwd())
