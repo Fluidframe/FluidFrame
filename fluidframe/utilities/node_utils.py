@@ -145,3 +145,38 @@ def install(args):
     generate_source_map(fluidframe_dir)
     
     os.chdir(os.getcwd())
+    
+def uninstall(args):
+    """
+    Uninstalls a Node.js package in the FluidFrame project.
+
+    Args:
+        args (object): An object containing the package name to be uninstalled.
+
+    Returns:
+        None
+
+    Uninstalls the specified Node.js package in the FluidFrame project directory.
+    If the FluidFrame directory does not exist, it prints an error message and returns.
+    """
+    package_name = args.package_name
+    fluidframe_dir = os.path.join(os.getcwd(), FLUIDFRAME_BUILD_DIR)
+
+    if not os.path.exists(fluidframe_dir):
+        print(f"Error: FluidFrame's package directory `{FLUIDFRAME_BUILD_DIR}` not found. Please run 'fluidframe init <project_name>' first.")
+        return
+
+    os.chdir(fluidframe_dir)
+
+    print(f"Uninstalling Node.js package: {package_name}")
+
+    npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
+    try:
+        subprocess.run([npm_command, 'uninstall', package_name], check=True)
+        print(f"Successfully uninstalled {package_name}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error uninstalling {package_name}: {e}")
+        
+    generate_source_map(fluidframe_dir)
+    
+    os.chdir(os.getcwd())

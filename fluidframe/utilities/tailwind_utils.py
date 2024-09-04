@@ -28,9 +28,9 @@ def tailwind_build(args={}):
     """
     fluidframe_dir = os.path.join(os.getcwd(), FLUIDFRAME_BUILD_DIR)
     if not os.path.exists(fluidframe_dir):
-        print(f"Error: FluidFrame's package directory {FLUIDFRAME_BUILD_DIR} not found. Please run 'fluidframe init <project_name>' first.")
+        # print(f"Error: FluidFrame's package directory {FLUIDFRAME_BUILD_DIR} not found. Please run 'fluidframe init <project_name>' first.")
         return
-
+    
     os.chdir(fluidframe_dir)
     try:
         npx_command = 'npx.cmd' if os.name == 'nt' else 'npx'

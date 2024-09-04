@@ -1,7 +1,7 @@
 import argparse
 from fluidframe.utilities.tailwind_utils import tailwind_build
-from fluidframe.utilities.node_utils import init_project, install
 from fluidframe.utilities.package_manager import generate_source_map
+from fluidframe.utilities.node_utils import init_project, install, uninstall
 
 def map_command(args):
     generate_source_map(root_path=args.folder_path)
@@ -19,6 +19,11 @@ def main():
     install_parser = subparsers.add_parser('install', help='Install a Node.js package')
     install_parser.add_argument('package_name', help='Name of the package to install')
     install_parser.set_defaults(func=install)
+    
+    # Uninstall command
+    uninstall_parser = subparsers.add_parser('uninstall', help='Uninstall a Node.js package')
+    uninstall_parser.add_argument('package_name', help='Name of the package to uninstall')
+    uninstall_parser.set_defaults(func=uninstall)
     
     # Tailwind build command
     watch_parser = subparsers.add_parser('tailwind_build', help='Start Tailwind CSS build process')
