@@ -1,20 +1,26 @@
 {
   "name": "fluidframe",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "build-css": "npx tailwindcss -i input.css -o dist/output.css"
+    "bundle": "rollup -c",
+    "build-css": "npx tailwindcss -i input.css -o dist/output.css",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "FluidFrame is a powerful, pythonic web application framework that embraces the simplicity and capability of hypermedia concepts. It combines Python's elegance with HTMX's innovative approach to create dynamic, interactive web applications without the need for complex JavaScript.",
   "dependencies": {
-    "highlight.js": "^11.10.0",
-    "htmx.org": "^1.9.12",
     "prismjs": "^1.29.0",
-    "tailwindcss": "^3.4.9",
-    "webpack": "^5.93.0"
+    "tailwindcss": "^3.4.9"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.21.2",
+    "rollup-plugin-postcss": "^4.0.2"
   },
   "directories": {
     "test": "tests"

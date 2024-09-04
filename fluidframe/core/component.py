@@ -421,6 +421,14 @@ class Component(StateRegistry, ABC):
         return self
     
     def render_children(self) -> str:
+        """
+        Render all child components.
+
+        This method renders all child components and concatenates their output.
+
+        Returns:
+            str: Concatenated output of all child components.
+        """
         return ''.join([child.render() if isinstance(child, Component) else child for child in self.children])
     
     @abstractmethod
