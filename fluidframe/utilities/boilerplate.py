@@ -1,7 +1,7 @@
 import os
 
 
-def generate_fluidframe_boilerplate(fluidframe_dir):
+def generate_app_boilerplate(fluidframe_dir: str):
     boilerplate = """import uvicorn
 from src.components import Card, Header
 from fluidframe.components.buttons import Button
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     print(f"Generated fluidframe boilerplate code at {fluidframe_dir}")
     
     
-def generate_fluidframe_component_boilerplate(fluidframe_dir):
+def generate_component_boilerplate(fluidframe_dir: str):
     boilerplate = """from fluidframe.core import div, h2
 from fluidframe.core import Component
 

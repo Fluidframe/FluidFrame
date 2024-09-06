@@ -16,8 +16,8 @@ STYLES = [
 ]
 
 
-FLUIDFRAME_SRC_DIR = "src"
-FLUIDFRAME_BUILD_DIR = "fluidbuild"
+FLUIDFRAME_PROJECT_DIR = "src"
+FLUIDFRAME_PACKAGE_DIR = "fluidbuild"
 
 
 SCRIPTS = [

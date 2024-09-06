@@ -1,4 +1,4 @@
-import inspect
+import inspect, os
 from typing import Callable
 from starlette.requests import Request
 from fluidframe.core.state import State
@@ -11,9 +11,9 @@ from starlette.staticfiles import StaticFiles
 from fluidframe.core.component import Component
 from fluidframe.core.dependency import requires
 from fluidframe.public import js_bundle as fluidframe_bundle
-from fluidframe.utilities.tailwind_utils import tailwind_build
 from fluidframe.utilities.package_manager import url_for_public
 from starlette.websockets import WebSocketDisconnect, WebSocket
+from fluidframe.utilities.package_manager import get_node_manager
 from fluidframe.core import html, body, meta, script, div, head, title, div, link
 
 
@@ -269,7 +269,7 @@ class FluidFrame(Starlette):
         if self.dev_mode:
             self.add_websocket_route("/live-reload", self.hot_reload_socket)
         else:
-            tailwind_build()
+            get_node_manager().tailwind_build()
         
         if self._fluidbuild_dir is None:
             print("Please use `app.mount_fluidbuild` method to mount your fluidbuild folder")
@@ -277,3 +277,5 @@ class FluidFrame(Starlette):
             self.mount("/fluidbuild", StaticFiles(directory=self._fluidbuild_dir))
         
         self.mount(f'/{PUBLIC_DIR}', StaticFiles(directory=get_lib_path("public")))
+        
+        # os.chdir('../src')
