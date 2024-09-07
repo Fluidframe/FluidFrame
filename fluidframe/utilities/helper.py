@@ -1,10 +1,19 @@
-import json
+import json, os
 import hashlib, re
 from uuid import uuid4
 from bs4 import BeautifulSoup
 from fluidframe.config import get_lib_path
+from fluidframe.public import js_bundle as public_files
 
 
+page_404 = None
+
+def get_404_page():
+    global page_404
+    if page_404 is None:
+        with open(get_lib_path(os.path.join("public", public_files.n_404_html)), 'r') as f:
+            page_404 = f.read()
+    return page_404
 
 def prettify(html: str) -> str:
     soup = BeautifulSoup(html, 'html.parser')
@@ -49,6 +58,7 @@ def generate_id(key: str) -> str:
         hash_code = hash_object.hexdigest()[:6]
         return f"{key}-{hash_code}"
     return "root"
+    
     
     
 class DotDict(dict):

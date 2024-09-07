@@ -51,6 +51,7 @@ class _scripts:
 
 
 class Bundle:
+    n_404_html: str = "./404.html"
     assets=_assets()
     scripts=_scripts()
 

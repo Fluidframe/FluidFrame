@@ -1,15 +1,16 @@
 import os
+from fluidframe.config import FLUIDFRAME_PACKAGE_DIR
 
 
 def generate_app_boilerplate(fluidframe_dir: str):
-    boilerplate = """import uvicorn
+    boilerplate = f"""import uvicorn
 from src.components import Card, Header
 from fluidframe.components.buttons import Button
 from fluidframe.core import FluidFrame, State, Page
 
 
 app = FluidFrame(dev_mode=False)
-app.mount_fluidbuild("../fluidbuild")
+app.mount_fluidbuild("./{FLUIDFRAME_PACKAGE_DIR}")
 
 
 ###############
@@ -20,7 +21,7 @@ app.mount_fluidbuild("../fluidbuild")
 card = Card()
 increment_btn = Button("Increment")
 decrement_btn = Button("Decrement")
-header = Header("The count is 0", {'count': 0})
+header = Header("The count is 0", {{'count': 0}})
 page = Page(endpoint="/", title="Fluidframe Sample App")
 
 
@@ -29,14 +30,14 @@ def increment(state: State) -> str:
     count = state.get('count')
     count+=1
     state.set('count', count)
-    return f"The count is {count}"
+    return f"The count is {{count}}"
 
 @decrement_btn.click(swap="textContent", target=header.text_id, bind=header)
 def decrement(state: State) -> str:
     count = state.get('count')
     count-=1
     state.set('count', count)
-    return f"The count is {count}"
+    return f"The count is {{count}}"
 
 
 
@@ -55,7 +56,7 @@ app.build()
 
 
 if __name__ == '__main__':
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("app:app", host="127.0.0.1", port=8000)
 """
     config_path = os.path.join(fluidframe_dir, 'app.py')
     with open(config_path, 'w') as f:
@@ -70,7 +71,6 @@ from fluidframe.core import Component
 
 
 class Card(Component):
-
     def render(self) -> str:
         return div(
             self.render_children(),

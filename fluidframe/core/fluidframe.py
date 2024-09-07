@@ -10,10 +10,10 @@ from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from fluidframe.core.component import Component
 from fluidframe.core.dependency import requires
+from fluidframe.utilities.helper import get_404_page
 from fluidframe.public import js_bundle as fluidframe_bundle
-from fluidframe.utilities.package_manager import url_for_public
 from starlette.websockets import WebSocketDisconnect, WebSocket
-from fluidframe.utilities.package_manager import get_node_manager
+from fluidframe.utilities.package_manager import get_node_manager, url_for_public
 from fluidframe.core import html, body, meta, script, div, head, title, div, link
 
 
@@ -57,7 +57,7 @@ def html_render_wrap(func: Callable) -> HTMLResponse:
 
 class Page(Component):
     
-    def __init__(self, endpoint: str, title: str|None = None) -> None:
+    def __init__(self, endpoint: str, title: str|None = None, cls: str|None = None) -> None:
         """
         Initialize the page.
 
@@ -66,6 +66,7 @@ class Page(Component):
             title (str|None): The title of the page. Defaults to "Fluidframe".
         """
         super().__init__()
+        self.cls = cls
         self.id = endpoint
         self.title = title or "Fluidframe"
     
@@ -94,7 +95,7 @@ class Page(Component):
                             id=self.id,
                             i=self.render_children(),
                         ),
-                        cls="relative dark:bg-gray-800 bg-white text-sm text-gray-900 dark: text-white"
+                        cls="relative dark:bg-gray-800 bg-white text-sm text-gray-900 dark: text-white" if self.cls is None else self.cls
                     )
                 ]
             )
@@ -275,6 +276,10 @@ class FluidFrame(Starlette):
             print("Please use `app.mount_fluidbuild` method to mount your fluidbuild folder")
         else:
             self.mount("/fluidbuild", StaticFiles(directory=self._fluidbuild_dir))
+        
+        @self.exception_handler(404)
+        async def custom_404(request: Request, exc: Exception):
+            return HTMLResponse(get_404_page())
         
         self.mount(f'/{PUBLIC_DIR}', StaticFiles(directory=get_lib_path("public")))
         
