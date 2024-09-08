@@ -400,7 +400,7 @@ These examples demonstrate how FluidFrame allows you to create interactive web a
             import 'prismjs/components/prism-python.min';
             import 'prismjs/themes/prism-okaidia.css';
             ```
-
+            
         2. Run the bundle command to process these files.
         3. FluidFrame creates optimized bundles in the `dist` folder, including only the necessary code and styles.
 
