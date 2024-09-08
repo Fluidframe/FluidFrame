@@ -488,6 +488,28 @@ So, fellow Pythonistas, let's sculpt digital experiences that are as dynamic and
 Welcome to the FluidFrame way of life. Let's make waves! 🐍💻🌊
 
 
+## Acknowledgements
+
+This project stands on the shoulders of giants. I'am deeply grateful to the following open-source projects and their communities:
+
+- [Starlette](https://www.starlette.io/) - The lightweight ASGI framework powering our backend.
+- [HTMX](https://htmx.org/) - The innovative library enabling our dynamic frontend with minimal JavaScript.
+- [Tailwind CSS](https://tailwindcss.com/) - The utility-first CSS framework that streamlines our styling process.
+- [Uvicorn](https://www.uvicorn.org/) - The lightning-fast ASGI server that runs our application.
+
+These tools have been instrumental in building and running our project efficiently. We extend our heartfelt thanks to the developers, contributors, and maintainers of these projects for their outstanding work and continued support.
+
+
+### Inspirations
+
+Our project has been inspired by several groundbreaking frameworks and libraries:
+
+- [React](https://github.com/facebook/react) - While we don't use React directly, its component-based architecture has influenced our approach to building user interfaces.
+- [Streamlit](https://github.com/streamlit/streamlit) - Streamlit's simplicity in creating data applications has inspired aspects of our user experience design.
+- [FastHTML](https://github.com/AnswerDotAI/fasthtml) - FastHTML's focus on building powerful, scalable web applications with minimal, compact code aligns closely with our project goals. Its innovative use of HTMX to build full applications while keeping everything within the Python ecosystem has inspired our own development patterns, demonstrating how to leverage HTMX's power in a Pythonic way.
+
+We're grateful for the innovative ideas these projects have contributed to the web development ecosystem.
+
 
 ## A Slithery Secret
 
