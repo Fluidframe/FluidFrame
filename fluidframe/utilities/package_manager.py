@@ -1,246 +1,301 @@
-import keyword, json, os, re
 from typing import Dict, Any, List, Optional
-from fluidframe.config import MODULES_DIR, PUBLIC_DIR
+import keyword, json, os, re, subprocess, platform, sys
+from fluidframe.utilities.boilerplate import generate_app_boilerplate, generate_component_boilerplate
+from fluidframe.config import PUBLIC_DIR, get_lib_path, FLUIDFRAME_PROJECT_DIR, FLUIDFRAME_PACKAGE_DIR
 
-
-def generate_source_map(root_path: str = 'node_modules', output_json: Optional[str] = None, output_py: Optional[str] = None, include_file_types: List[str] = [".js", ".html", ".css", ".svg", ".webp", ".jpeg", ".jpg", ".png"], ignore_exists:bool=True):
-    """
-    Generates a source map for a directory.
-
-    Args:
-        root_path: The directory path to generate the source map for.
-        output_json: The path to write the JSON source map to.
-        output_py: The path to write the Python source map to.
-        include_file_types: A list of file types to include in the source map.
-        ignore_exists: A bool flag to ignore existing files and rewrite it.
-
-    Raises:
-        FileExistsError: If either the JSON or Python source map file already exists.
-    """
-    json_data = analyze_and_simplify_directory(root_path, include_file_types)
-        
-    # Generate default output paths if not provided
-    if output_json is None or output_py is None:
-        base_name = os.path.basename(root_path)
-        parent_dir = os.path.dirname(root_path)
-            
-        base_name = replace_strings(base_name)
-        if output_json is None:
-            output_json = os.path.join(parent_dir, f"{base_name}.json")
-        if output_py is None:
-            output_py = os.path.join(parent_dir, f"{base_name}.py")
-        
-    # Check if files already exist
-    if not ignore_exists:
-        if os.path.exists(output_json):
-            raise FileExistsError(f"The file {output_json} already exists. Please provide a different name.")
-        if os.path.exists(output_py):
-            raise FileExistsError(f"The file {output_py} already exists. Please provide a different name.")
-        
-    # write_json(json_data, output_json)
-    generate_python_mapping(json_data, output_py)
-        
-def analyze_and_simplify_directory(root_path: str, include_file_types: List[str]) -> Dict[str, Any]:
-    """
-    Analyzes and simplifies a directory structure.
-
-    Args:
-        root_path (str): The path to the root directory.
-        include_file_types (List[str]): A list of file types to include in the analysis.
-
-    Returns:
-        Dict[str, Any]: A simplified dictionary representation of the directory structure.
-    """
-    raw_data = analyze_directory(root_path, include_file_types)
-    return simplify_structure(raw_data)
-
-def analyze_directory(root_path: str, include_file_types: List[str]) -> Dict[str, Any]:
-    """
-    Analyzes and simplifies a directory structure by walking through the directory and its subdirectories,
-    and creating a dictionary representation of the directory structure with file paths.
-
-    Args:
-        root_path (str): The path to the root directory.
-        include_file_types (List[str]): A list of file types to include in the analysis.
-
-    Returns:
-        Dict[str, Any]: A simplified dictionary representation of the directory structure, where the keys are the
-        directory paths and the values are dictionaries of file names and their corresponding paths.
-
-    Example:
-        >>> analyze_directory('/path/to/directory', ['.txt', '.csv'])
-        {
-            'path': {
-                'to': {
-                    'directory': {
-                        'file1.txt': '/path/to/directory/file1.txt',
-                        'file2.txt': '/path/to/directory/file2.txt',
-                        'subdir': {
-                            'file3.txt': '/path/to/directory/subdir/file3.txt',
-                            'file4.csv': '/path/to/directory/subdir/file4.csv'
-                        }
-                    }
-                }
-            }
-        }
-    """
-    result = {}
-    for root, _, files in os.walk(root_path):
-        current = result
-        path_parts = os.path.relpath(root, root_path).split(os.sep)
-            
-        for part in path_parts:
-            if part == '.':
-                continue
-            current = current.setdefault(part, {})
-            
-        for file in files:
-            if any(file.endswith(ext) for ext in include_file_types):
-                file_path = os.path.join(os.path.relpath(root, root_path), file)
-                file_path = file_path.replace('\\', '/')  # Ensure forward slashes for consistency
-                current[file] = file_path
-
-    return result
-
-def simplify_structure(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Recursively simplifies a nested dictionary structure by removing empty dictionaries and collapsing single-item dictionaries.
-
-    Args:
-        data (Dict[str, Any]): The dictionary to simplify.
-
-    Returns:
-        Dict[str, Any]: The simplified dictionary structure.
-    """
-    if isinstance(data, dict):
-        if len(data) == 1 and not isinstance(next(iter(data.values())), dict):
-            return next(iter(data.values()))
-        simplified = {k: simplify_structure(v) for k, v in data.items() if v}  # Skip empty values
-        return {k: v for k, v in simplified.items() if v}  # Remove empty dictionaries
-    return data
-
-def write_json(data: Dict[str, Any], output_json: str):
-    """
-    Writes the given data to a JSON file at the specified output path.
-
-    Args:
-        data (Dict[str, Any]): The data to write to the JSON file.
-        output_json (str): The path to the output JSON file.
-
-    Returns:
-        None
-
-    Prints:
-        A message indicating the path where the JSON mapping was written.
-    """
-    with open(output_json, 'w') as f:
-        json.dump(data, f, indent=2)
-    print(f"JSON mapping written to {output_json}")
-
-def generate_python_mapping(data: Dict[str, Any], output_py: str):
-    """
-    Generates a Python mapping file based on the provided data and writes it to the specified output path.
-
-    Args:
-        data (Dict[str, Any]): The data to be used for generating the Python mapping.
-        output_py (str): The path where the Python mapping file will be written.
-
-    Returns:
-        None
-
-    Prints:
-        A message indicating the path where the Python mapping was written.
-    """
-    bundle_map_content = generate_bundle_map(data)
-    with open(output_py, "w") as f:
-        f.write(bundle_map_content)
-    print(f"Python mapping written to {output_py}")
-
-def generate_bundle_map(data: Dict[str, Any]) -> str:
-    """
-    Generates a bundle map string based on the provided data.
-
-    Args:
-        data (Dict[str, Any]): A dictionary containing the data to be used for generating the bundle map.
-
-    Returns:
-        str: A string representing the bundle map.
-    """
-    bundle_map_lines = []
-    main_class_lines = ["\n\nclass Bundle:\n"]
-        
-    for key, value in data.items():
-        key = replace_strings(key)
-        if isinstance(value, dict):
-            class_name = key
-            bundle_map_lines.append(generate_class(class_name, value))
-            main_class_lines.append(f"    {class_name}=_{class_name}()\n")
-        else:
-            main_class_lines.append(f'    {key}: str = "{value}"\n')
-        
-    main_class_lines.append("\n\njs_bundle = Bundle()")
-    return ''.join(bundle_map_lines + main_class_lines)
-
-def generate_class(name: str, data: Dict[str, Any], indent: str = "") -> str:
-    """
-    Generates a string representing a Python class based on the provided data.
-
-    Args:
-        name (str): The name of the class to be generated.
-        data (Dict[str, Any]): A dictionary containing the data to be used for generating the class.
-        indent (str): The indentation string to be used for the class definition. Defaults to an empty string.
-
-    Returns:
-        str: A string representing the generated class.
-    """
-    class_lines = [f"\n{indent}class _{name}:\n"]
-    for key, value in data.items():
-        key = replace_strings(key)
-        if isinstance(value, dict):
-            if value:  # Only generate subclass if the dictionary is not empty
-                sub_class_name = f"{name}_{key}"
-                class_lines.append(generate_class(sub_class_name, value, indent + "    "))
-                class_lines.append(f"{indent}    {key} = _{sub_class_name}()\n")
-        else:
-            class_lines.append(f'{indent}    {key}: str = "{value}"\n')
-        
-    if len(class_lines) == 1:  # If no attributes were added, add a pass statement
-        class_lines.append(f"{indent}    pass\n")
-        
-    return ''.join(class_lines)
-
-def replace_strings(text: str) -> str:
-    """
-    Replaces all non-alphanumeric characters in the given text with underscores, and prepends a 'n_' prefix to the text if it starts with a digit.
-    Removes multiple consecutive underscores and trims leading and trailing underscores.
-    If the resulting text is a Python keyword, it is prefixed with 'v_'.
-    If the resulting text is not a valid Python identifier, it is appended with an underscore.
-    
-    :param text: The input text to be processed.
-    :type text: str
-    :return: The processed text with all non-alphanumeric characters replaced with underscores, and optional prefixes and suffixes added.
-    :rtype: str
-    """
-    text = re.sub(r'[^a-zA-Z0-9]', '_', text)
-    if text[0].isdigit():
-        text = f"n_{text}"
-    text = re.sub(r'_+', '_', text)
-    text = text.strip('_')
-    if keyword.iskeyword(text):
-        text = f"v_{text}"
-    if not text or not text.isidentifier():
-        text = f"{text}_"
-    return text
-
-def url_for_module(file_path:str) -> str:
-    return f"{MODULES_DIR}/{file_path}"
 
 def url_for_public(file_path: str) -> str:
     return f"{PUBLIC_DIR}/{file_path}"
 
-# if __name__ == "__main__":
-#     # # Or specify custom paths
-#     generate_source_map(
-#         root_path='node_modules', 
-#         include_file_types=['.js', '.css']
-#     )
+
+PACKAGE_MAPPER = None
+def generate_source_map(root_path: str = 'node_modules', output_json: Optional[str] = None, output_py: Optional[str] = None, include_file_types: List[str] = [".js", ".html", ".css", ".svg", ".webp", ".jpeg", ".jpg", ".png"], ignore_exists:bool=True):
+    global PACKAGE_MAPPER
+    if PACKAGE_MAPPER is None:
+        PACKAGE_MAPPER = PackageMapper()
+    PACKAGE_MAPPER.generate_source_map(root_path, output_json, output_py, include_file_types, ignore_exists)
+
+
+NODE_MANAGER = None
+def get_node_manager():
+    global NODE_MANAGER
+    if NODE_MANAGER is None:
+        NODE_MANAGER = NodeManager(
+            package_folder=FLUIDFRAME_PACKAGE_DIR, 
+            project_folder=FLUIDFRAME_PROJECT_DIR,
+        )
+    return NODE_MANAGER
+
+
+class PackageMapper:
+    def _simplify_structure(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        if isinstance(data, dict):
+            if len(data) == 1 and not isinstance(next(iter(data.values())), dict):
+                return next(iter(data.values()))
+            simplified = {k: self._simplify_structure(v) for k, v in data.items() if v}  # Skip empty values
+            return {k: v for k, v in simplified.items() if v}  # Remove empty dictionaries
+        return data
+    
+    def _replace_strings(self, text: str) -> str:
+        text = re.sub(r'[^a-zA-Z0-9]', '_', text)
+        if text[0].isdigit():
+            text = f"n_{text}"
+        text = re.sub(r'_+', '_', text)
+        text = text.strip('_')
+        if keyword.iskeyword(text):
+            text = f"v_{text}"
+        if not text or not text.isidentifier():
+            text = f"{text}_"
+        return text
+    
+    def _generate_class(self, name: str, data: Dict[str, Any], indent: str = "") -> str:
+        class_lines = [f"\n{indent}class _{name}:\n"]
+        for key, value in data.items():
+            key = self._replace_strings(key)
+            if isinstance(value, dict):
+                if value:  # Only generate subclass if the dictionary is not empty
+                    sub_class_name = f"{name}_{key}"
+                    class_lines.append(self._generate_class(sub_class_name, value, indent + "    "))
+                    class_lines.append(f"{indent}    {key} = _{sub_class_name}()\n")
+            else:
+                class_lines.append(f'{indent}    {key}: str = "{value}"\n')
+            
+        if len(class_lines) == 1:  # If no attributes were added, add a pass statement
+            class_lines.append(f"{indent}    pass\n")
+            
+        return ''.join(class_lines)
+    
+    def _analyze_and_simplify_directory(self, root_path: str, include_file_types: List[str]) -> Dict[str, Any]:
+        raw_data = {}
+        for root, _, files in os.walk(root_path):
+            current = raw_data
+            path_parts = os.path.relpath(root, root_path).split(os.sep)
+                
+            for part in path_parts:
+                if part == '.':
+                    continue
+                current = current.setdefault(part, {})
+                
+            for file in files:
+                if any(file.endswith(ext) for ext in include_file_types):
+                    file_path = os.path.join(os.path.relpath(root, root_path), file)
+                    file_path = file_path.replace('\\', '/')  # Ensure forward slashes for consistency
+                    current[file] = file_path
+        return self._simplify_structure(raw_data)
+    
+    def _generate_python_mapping(self, data: Dict[str, Any], output_py: str):
+        bundle_map_lines = []
+        main_class_lines = ["\n\nclass Bundle:\n"]
+            
+        for key, value in data.items():
+            key = self._replace_strings(key)
+            if isinstance(value, dict):
+                class_name = key
+                bundle_map_lines.append(self._generate_class(class_name, value))
+                main_class_lines.append(f"    {class_name}=_{class_name}()\n")
+            else:
+                main_class_lines.append(f'    {key}: str = "{value}"\n')
+            
+        main_class_lines.append("\n\njs_bundle = Bundle()")
+
+        bundle_map_content = ''.join(bundle_map_lines + main_class_lines)
+        with open(output_py, "w") as f:
+            f.write(bundle_map_content)
+        print(f"Python mapping written to {output_py}")
+
+    def generate_source_map(self, root_path: str = 'node_modules', output_json: Optional[str] = None, output_py: Optional[str] = None, include_file_types: List[str] = [".js", ".html", ".css", ".svg", ".webp", ".jpeg", ".jpg", ".png"], ignore_exists:bool=True):
+        json_data = self._analyze_and_simplify_directory(root_path, include_file_types)
+            
+        # Generate default output paths if not provided
+        if output_json is None or output_py is None:
+            base_name = os.path.basename(root_path)
+            parent_dir = os.path.dirname(root_path)
+                
+            base_name = self._replace_strings(base_name)
+            if output_json is None:
+                output_json = os.path.join(parent_dir, f"{base_name}.json")
+            if output_py is None:
+                output_py = os.path.join(parent_dir, f"{base_name}.py")
+            
+        # Check if files already exist
+        if not ignore_exists:
+            if os.path.exists(output_json):
+                raise FileExistsError(f"The file {output_json} already exists. Please provide a different name.")
+            if os.path.exists(output_py):
+                raise FileExistsError(f"The file {output_py} already exists. Please provide a different name.")
+            
+        self._generate_python_mapping(json_data, output_py)
+   
+ 
+
+class NodeManager():
+    
+    def __init__(self, package_folder: str, project_folder: str) -> None:
+        self.working_dir = os.getcwd()
+        self.project_folder_name = project_folder
+        self.package_folder = os.path.join(self.working_dir, package_folder)
+        self.project_folder = os.path.join(self.working_dir, project_folder)
+    
+    def check_node_installed(self) -> bool:
+        try:
+            subprocess.run(['node', '--version'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return False
+        return True
+    
+    def install_node(self) -> None:
+        system = platform.system().lower()
+        if system == "windows":
+            print("Please download and install Node.js from https://nodejs.org/")
+        elif system == "darwin":
+            print("To install Node.js on macOS, we recommend using Homebrew:")
+            print("1. Install Homebrew: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"")
+            print("2. Install Node.js: brew install node")
+        elif system == "linux":
+            print("To install Node.js on Linux, use your distribution's package manager.")
+            print("For Ubuntu/Debian: sudo apt update && sudo apt install nodejs npm")
+            print("For Fedora: sudo dnf install nodejs")
+        else:
+            print("Please install Node.js manually from https://nodejs.org/")
+        sys.exit(1)
+            
+    def init_project(self, project_name: str) -> None:
+        os.makedirs(self.package_folder, exist_ok=True)
+        os.makedirs(self.project_folder, exist_ok=True)
+
+        self.create_package_json(project_name)
+        self.create_tailwind_config()
+        self.create_rollup_config()
+        self.tailwind_build()
+        self.update()
+        
+        generate_source_map(root_path=self.package_folder)
+        generate_app_boilerplate(self.project_folder)
+        generate_component_boilerplate(self.project_folder)
+        
+        print(f"Project '{project_name}' initialized successfully.") 
+ 
+    def create_package_json(self, package_name: str) -> None:
+        package_json = get_lib_path("utilities/package.json")
+        with open(package_json, 'r') as f:
+            package_json = f.read()
+        package_json = json.loads(package_json)
+        package_json['name'] = package_name
+        save_path = os.path.join(self.package_folder, 'package.json')
+        with open(save_path, 'w') as f:
+            json.dump(package_json, f, indent=2)
+            
+    def create_rollup_config(self) -> None:
+        rollup_config = get_lib_path("utilities/rollup.config.js")
+        with open(rollup_config, 'r') as f:
+            rollup_config = f.read()
+        save_path = os.path.join(self.package_folder, 'rollup.config.js')
+        with open(save_path, 'w') as f:
+            f.write(rollup_config)
+            
+    def create_tailwind_config(self) -> None:
+        
+        with open(os.path.join(self.package_folder, 'input.css'), 'w') as f:
+            f.write("@tailwind base;\n@tailwind components;\n@tailwind utilities;\n")
+        
+        package_path = get_lib_path()
+        library_files = [
+            os.path.join(package_path, "components", "**", "*.py"),
+            os.path.join(package_path, "public", "**", "*.js"),
+            os.path.join(package_path, "core", "**", "*.py"),
+        ]    
+        config_content = f"""
+module.exports = {{
+  content: [
+    // Library files
+{''.join([f"    '{f}',\n" for f in library_files])}
+    // User project files
+    '../src/**/*.{{html,py}}'
+  ],
+  theme: {{
+    extend: {{}},
+  }},
+  plugins: [],
+}}
+"""     
+        tailwind_config_path = os.path.join(self.package_folder, 'tailwind.config.js')
+        with open(tailwind_config_path, 'w') as f:
+            f.write(config_content)
+            
+        generate_source_map(root_path=self.package_folder)
+        
+        print("Generated `tailwind.config.js` and `input.css` has been created")
+    
+    def install(self, package_name: str) -> None:
+        if not self.check_node_installed():
+            self.install_node()
+
+        print(f"Installing Node.js package: {package_name}")
+        npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
+        try:
+            subprocess.run([npm_command, 'install', package_name], cwd=self.package_folder, check=True)
+            print(f"Successfully installed {package_name}")
+            generate_source_map(root_path=self.package_folder)
+        except subprocess.CalledProcessError as e:
+            print(f"Error installing {package_name}: {e}")
+    
+    def uninstall(self, package_name: str) -> None:
+        if not self.check_node_installed():
+            self.install_node()
+
+        print(f"Uninstalling Node.js package: {package_name}")
+        npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
+        try:
+            subprocess.run([npm_command, 'uninstall', package_name], cwd=self.package_folder, check=True)
+            print(f"Successfully uninstalled {package_name}")
+            generate_source_map(root_path=self.package_folder)
+        except subprocess.CalledProcessError as e:
+            print(f"Error uninstalling {package_name}: {e}")
+    
+    def update(self) -> None:
+        if not self.check_node_installed():
+            self.install_node()
+
+        print("Updating Node.js packages...")
+        npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
+        try:
+            subprocess.run([npm_command, 'update'], cwd=self.package_folder, check=True)
+            print("Packages updated successfully.")
+            generate_source_map(root_path=self.package_folder)
+        except subprocess.CalledProcessError as e:
+            print(f"Error updating packages: {e}")
+    
+    def tailwind_build(self) -> None:
+        try:
+            npx_command = 'npx.cmd' if os.name == 'nt' else 'npx'
+            subprocess.run([npx_command, 'tailwindcss', '-i', 'input.css', '-o', 'dist/output.css'], cwd=self.package_folder, check=True)
+            generate_source_map(root_path=self.package_folder)
+        except subprocess.CalledProcessError as e:
+            print(f"Error on Tailwind build process: {e}")
+        except KeyboardInterrupt:
+            print("Tailwind build process has been stopped.")
+            
+    def bundle_package(self, input_dir: str, output_dir: str) -> None:
+        abs_input_dir = os.path.abspath(os.path.join(self.working_dir, input_dir))
+        abs_output_dir = os.path.abspath(os.path.join(self.working_dir, output_dir))
+        
+        print(f"Bundling files from {abs_input_dir} to {abs_output_dir}")
+        
+        npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
+        try:
+            subprocess.run(
+                [npm_command, 'run', 'bundle', '--', f'--input={abs_input_dir}', f'--output={abs_output_dir}'], 
+                cwd=self.package_folder,
+                check=True
+            )
+            print(f"Successfully bundled files from {abs_input_dir} to {abs_output_dir}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error on Bundling process: {e}")
+        except KeyboardInterrupt:
+            print("Rollup bundle process has been stopped.")
+    
+    def map_directory(self, folder_path: str) -> None:
+        generate_source_map(root_path=folder_path)
+        
+    
+

@@ -23,4 +23,3 @@ def set_dependancies(scripts: Optional[List[str]|str]=None, styles: Optional[Lis
     elif isinstance(scripts, str):
         scripts = [scripts]
     return json.dumps({"scripts": scripts, "styles": styles})
-    

@@ -1,36 +1,18 @@
-import sys, os
-import subprocess, platform
+import sys, os, platform
 from Cython.Build import cythonize
 from setuptools.command.build_py import build_py
 from setuptools import setup, find_packages, Extension
-from fluidframe.utilities.package_manager import generate_source_map
-from fluidframe.utilities.node_utils import check_node_installed, install_node
+from fluidframe.utilities.package_manager import get_node_manager
 
 sys.dont_write_bytecode = True
 
 class CustomBuild(build_py):
     def run(self):
-        if not check_node_installed():
-            install_node()
-        self.create_fluidframe_node_module()
-        print("Build complete inside with node installation check and package.json installation for installing FluidFrame dependencies")
+        node_manager = get_node_manager()
+        if not node_manager.check_node_installed():
+            node_manager.install_node()
         build_py.run(self)
-        
-    def create_fluidframe_node_module(self):
-        # Create node_modules for FluidFrame
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        fluidframe_dir = os.path.join(current_dir, 'fluidframe')
-        os.chdir(fluidframe_dir)
-        try:
-            npm_command = 'npm.cmd' if os.name == 'nt' else 'npm'
-            subprocess.run([npm_command, 'install'], check=True)
-            print("Successfully installed FluidFrame dependencies")
-            generate_source_map(os.path.join(fluidframe_dir, 'public'))
-            generate_source_map(os.path.join(fluidframe_dir, 'node_modules'))
-        except subprocess.CalledProcessError as e:
-            print(f"Error installing FluidFrame dependencies: {e}")
-        os.chdir(current_dir)
-
+        print("FluidFrame build complete, start a project by running `fluidframe init <project_name>`")
 
 extensions = [
     Extension(

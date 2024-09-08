@@ -1,25 +1,19 @@
-import json
+import json, os
 import hashlib, re
 from uuid import uuid4
-from typing import List
 from bs4 import BeautifulSoup
-from markdown_it import MarkdownIt
-from fluidframe.utils import get_lib_path
-from mdit_py_plugins.anchors import anchors_plugin
-from mdit_py_plugins.footnote import footnote_plugin
-from mdit_py_plugins.tasklists import tasklists_plugin
-from mdit_py_plugins.front_matter import front_matter_plugin
+from fluidframe.config import get_lib_path
+from fluidframe.public import js_bundle as public_files
 
 
+page_404 = None
 
-MARKDOWNER = None
-
-def markdown_to_html(markdown_text: str) -> str:
-    global MARKDOWNER
-    if MARKDOWNER is None:
-        MARKDOWNER = MarkdownIt('commonmark', {'linkify': True, 'break': True, 'html': True})
-        MARKDOWNER = MARKDOWNER.use(footnote_plugin).use(front_matter_plugin).use(anchors_plugin).use(tasklists_plugin).enable('table')
-    return MARKDOWNER.render(markdown_text)
+def get_404_page():
+    global page_404
+    if page_404 is None:
+        with open(get_lib_path(os.path.join("public", public_files.n_404_html)), 'r') as f:
+            page_404 = f.read()
+    return page_404
 
 def prettify(html: str) -> str:
     soup = BeautifulSoup(html, 'html.parser')
@@ -27,6 +21,28 @@ def prettify(html: str) -> str:
     lines = html_string.split('\n')
     html_string = '\n'.join(' ' * (len(line) - len(line.lstrip())) * 2 + line.lstrip() for line in lines)
     return re.sub(r'\n\s*\n', '\n\n', html_string)
+
+def check_if_html(text: str) -> bool:
+    html_pattern = r'<[a-z]+(?:\s+[a-z-]+(?:=(?:"[^"]*"|\'[^\']*\'))?)*\s*(?:/>|>[^<]*</[a-z]+>|>(?:(?!<[a-z]+).)*</[a-z]+>)'
+    if re.search(html_pattern, text, re.IGNORECASE | re.DOTALL):
+        return True
+    else:
+        return False
+    
+def remove_outer_div(html_string: str):
+    # Regex to match the outermost div tag and extract its contents
+    pattern = r'^<div[^>]*>(.*)</div>$'
+    if match := re.match(pattern, html_string, re.DOTALL):
+        return match[1].strip()
+    return html_string
+    
+def update_outer_div(html: str, attributes: dict):
+    new_string = []
+    for k, v in attributes.items():
+        new_string.append(f'{k}="{v}"')
+    input_string = ' '.join(new_string)
+    tag_split = html.split(">", maxsplit=1)
+    return f"{tag_split[0]} {input_string}>{''.join(tag_split[1:])}"
 
 def save_as_html(file_path, html_string):
     html_string=prettify(html_string)
@@ -42,6 +58,7 @@ def generate_id(key: str) -> str:
         hash_code = hash_object.hexdigest()[:6]
         return f"{key}-{hash_code}"
     return "root"
+    
     
     
 class DotDict(dict):
