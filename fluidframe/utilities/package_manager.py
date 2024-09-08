@@ -224,7 +224,7 @@ module.exports = {{
             
         generate_source_map(root_path=self.package_folder)
         
-        print(f"Generated `tailwind.config.js` and `input.css` has been created")
+        print("Generated `tailwind.config.js` and `input.css` has been created")
     
     def install(self, package_name: str) -> None:
         if not self.check_node_installed():
@@ -299,10 +299,3 @@ module.exports = {{
         
     
 
-if __name__ == "__main__":
-    # # Or specify custom paths
-    # generate_source_map(
-    #     root_path='node_modules', 
-    #     include_file_types=['.js', '.css']
-    # )
-    pass

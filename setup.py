@@ -11,9 +11,8 @@ class CustomBuild(build_py):
         node_manager = get_node_manager()
         if not node_manager.check_node_installed():
             node_manager.install_node()
-        print("Build complete installing FluidFrame dependencies")
-        node_manager.update()
         build_py.run(self)
+        print("FluidFrame build complete, start a project by running `fluidframe init <project_name>`")
 
 extensions = [
     Extension(
