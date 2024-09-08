@@ -2,21 +2,17 @@ import sys, os, platform
 from Cython.Build import cythonize
 from setuptools.command.build_py import build_py
 from setuptools import setup, find_packages, Extension
-from fluidframe.utilities.package_manager import generate_source_map
-from fluidframe.utilities.node_utils import check_node_installed, install_node
+from fluidframe.utilities.package_manager import get_node_manager
 
 sys.dont_write_bytecode = True
 
 class CustomBuild(build_py):
     def run(self):
-        if not check_node_installed():
-            install_node()
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        fluidframe_dir = os.path.join(current_dir, 'fluidframe')
-        os.chdir(fluidframe_dir)
-        generate_source_map(os.path.join(fluidframe_dir, 'public'))
-        os.chdir(current_dir)
-        print("Build complete inside with node installation check and package.json installation for installing FluidFrame dependencies")
+        node_manager = get_node_manager()
+        if not node_manager.check_node_installed():
+            node_manager.install_node()
+        print("Build complete installing FluidFrame dependencies")
+        node_manager.update()
         build_py.run(self)
 
 extensions = [
