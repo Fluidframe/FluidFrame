@@ -123,36 +123,56 @@ Before you begin, ensure you have the following installed on your system:
 
 ---
 
-## Installation Steps
+## Installation and development
 
-1. Clone the repository:
+### contributing
+  1. Clone the repository:
+  ```bash
+  git clone https://github.com/AswanthCManoj/fluidframe.git
+  cd fluidframe
+  ```
+    
+  2. Install the project dependencies using Poetry:
+  ```bash
+  poetry install
+  ```
+  
+### Development
+  Install FluidFrame directly from the repository:
+  - Using pip:
+  ```bash
+  pip install git+https://github.com/AswanthCManoj/fluidframe.git
+  ```
+       
+  - Using Poetry:
+  ```bash
+  poetry add git+https://github.com/AswanthCManoj/fluidframe.git
+  ```
 
-```bash
-git clone https://github.com/AswanthCManoj/fluidframe.git
-cd fluidframe
-```
+**Note:** This step compiles the Cython modules and places the resulting binary files in the appropriate directories. (Currently only supports Linux)
 
-2. Install the project dependencies using Poetry:
 
-```bash
-poetry install
-```
-
-This step also compiles the Cython modules and places the resulting binary files in the appropriate directories. **(currently only supports linux)**
-
-3. Initialize a project:
-
+### Project Initialization
+Create a new FluidFrame project:
 ```bash
 poetry run fluidframe init myproject
 ```
-The above command creates two folders `fluidbuild` and `src` in which fluidbuild contains all modules dependencies and stuffs mean while src will contain a starter boiler plate code.
+This command creates two folders:
 
-4. Verify the installation:
+- `fluidbuild`: Contains all module dependencies and related files
+- `src`: Contains starter boilerplate code
+
+
+### Verification
+To verify the installation:
 ```bash
->> poetry shell
->> python
->> from fluidframe.core import div
->> print(div("Installation successful!"))
+poetry shell
+python
+```
+Then in the Python interpreter:
+```bash
+from fluidframe.core import div
+print(div("Installation successful!"))
 ```
 
 If you see `<div>Installation successful!</div>` printed without any errors, the installation is complete.
@@ -381,7 +401,7 @@ These examples demonstrate how FluidFrame allows you to create interactive web a
 
 - `Sep 5, 2024`: Fluidframe cli now supports folder mapping and javascript bundling. 
 
-    - **Folder mapping**: FluidFrame's CLI now includes a powerful map command that simplifies file and asset management in your projects. By running fluidframe map path/folder, the CLI generates a Python file that creates an easy-to-use structure for accessing your project's files. For example, after mapping, you can access files like this:
+    - **Folder mapping**: FluidFrame's CLI now includes a powerful map command that simplifies file and asset management in your projects. By running `fluidframe map path/folder`, the CLI generates a Python file that creates an easy-to-use structure for accessing your project's files. For example, after mapping, you can access files like this:
 
         ```python
         from path.folder import js_bundle as folder
