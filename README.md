@@ -135,6 +135,7 @@ Before you begin, ensure you have the following installed on your system:
   2. Install the project dependencies using Poetry:
   ```bash
   poetry install
+  poetry run pip install -e .
   ```
   
 ### Development

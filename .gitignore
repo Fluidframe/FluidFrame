@@ -296,6 +296,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Ignore fluidbuild.py
+fluidbuild.py
 index.html
 tailwind.config.js
 src/
@@ -303,4 +306,3 @@ fluidpack/
 fluidbuild/
 node_modules.json
 app.py
-fluidbuild.py
