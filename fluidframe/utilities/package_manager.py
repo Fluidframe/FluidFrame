@@ -2,6 +2,7 @@ from typing import Dict, Any, List, Optional
 import keyword, json, os, re, subprocess, platform, sys
 from fluidframe.utilities.boilerplate import generate_app_boilerplate, generate_component_boilerplate
 from fluidframe.config import PUBLIC_DIR, get_lib_path, FLUIDFRAME_PROJECT_DIR, FLUIDFRAME_PACKAGE_DIR
+import posixpath 
 
 
 def url_for_public(file_path: str) -> str:
@@ -130,9 +131,7 @@ class PackageMapper:
         self._generate_python_mapping(json_data, output_py)
    
  
-
-class NodeManager():
-    
+class NodeManager:
     def __init__(self, package_folder: str, project_folder: str) -> None:
         self.working_dir = os.getcwd()
         self.project_folder_name = project_folder
@@ -151,19 +150,13 @@ class NodeManager():
         if system == "windows":
             print("Please download and install Node.js from https://nodejs.org/")
         elif system == "darwin":
-            print(
-                "To install Node.js on macOS, we recommend using Homebrew:",
-                "1. Install Homebrew: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
-                "2. Install Node.js: brew install node",
-                sep="\n"
-            )
+            print("To install Node.js on macOS, we recommend using Homebrew:")
+            print("1. Install Homebrew: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"")
+            print("2. Install Node.js: brew install node")
         elif system == "linux":
-            print(
-                "To install Node.js on Linux, use your distribution's package manager.",
-                "For Ubuntu/Debian: sudo apt update && sudo apt install nodejs npm",
-                "For Fedora: sudo dnf install nodejs",
-                sep="\n"
-            )
+            print("To install Node.js on Linux, use your distribution's package manager.")
+            print("For Ubuntu/Debian: sudo apt update && sudo apt install nodejs npm")
+            print("For Fedora: sudo dnf install nodejs")
         else:
             print("Please install Node.js manually from https://nodejs.org/")
         sys.exit(1)
@@ -203,21 +196,24 @@ class NodeManager():
             f.write(rollup_config)
             
     def create_tailwind_config(self) -> None:
-        
         with open(os.path.join(self.package_folder, 'input.css'), 'w') as f:
             f.write("@tailwind base;\n@tailwind components;\n@tailwind utilities;\n")
         
         package_path = get_lib_path()
         library_files = [
-            os.path.join(package_path, "components", "**", "*.py"),
-            os.path.join(package_path, "public", "**", "*.js"),
-            os.path.join(package_path, "core", "**", "*.py"),
-        ]    
+            posixpath.join(package_path, "components", "**", "*.py"),
+            posixpath.join(package_path, "public", "**", "*.js"),
+            posixpath.join(package_path, "core", "**", "*.py"),
+        ]
+        
+        # Convert Windows paths to POSIX format
+        library_files = [path.replace(os.sep, '/') for path in library_files]
+
         config_content = f"""
 module.exports = {{
   content: [
     // Library files
-{''.join([(f"    '{f}'," + "\n") for f in library_files])}
+{os.linesep.join(f"    '{file}'," for file in library_files)}
     // User project files
     '../src/**/*.{{html,py}}'
   ],
@@ -230,7 +226,7 @@ module.exports = {{
         tailwind_config_path = os.path.join(self.package_folder, 'tailwind.config.js')
         with open(tailwind_config_path, 'w') as f:
             f.write(config_content)
-            
+        
         generate_source_map(root_path=self.package_folder)
         
         print("Generated `tailwind.config.js` and `input.css` has been created")
@@ -305,6 +301,5 @@ module.exports = {{
     
     def map_directory(self, folder_path: str) -> None:
         generate_source_map(root_path=folder_path)
-        
     
 
