@@ -128,7 +128,7 @@ Before you begin, ensure you have the following installed on your system:
 ### contributing
   1. Clone the repository:
   ```bash
-  git clone https://github.com/AswanthCManoj/fluidframe.git
+  git clone git@github.com:AswanthManoj/fluidframe.git
   cd fluidframe
   ```
     
