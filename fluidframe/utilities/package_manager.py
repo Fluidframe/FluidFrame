@@ -49,19 +49,20 @@ class PackageMapper:
         return text
     
     def _generate_class(self, name: str, data: Dict[str, Any], indent: str = "") -> str:
-        class_lines = [f"\n{indent}class _{name}:\n"]
+        class_lines = ["\n" + f"{indent}class _{name}:" + "\n"]
         for key, value in data.items():
             key = self._replace_strings(key)
             if isinstance(value, dict):
                 if value:  # Only generate subclass if the dictionary is not empty
-                    sub_class_name = f"{name}_{key}"
-                    class_lines.append(self._generate_class(sub_class_name, value, indent + "    "))
-                    class_lines.append(f"{indent}    {key} = _{sub_class_name}()\n")
+                    class_lines.extend([
+                        self._generate_class(f"{name}_{key}", value, f"{indent}    "),
+                        f"{indent}    {key} = _{name}_{key}()" + "\n"
+                    ])
             else:
-                class_lines.append(f'{indent}    {key}: str = "{value}"\n')
+                class_lines.append(f'{indent}    {key}: str = "{value}"' + '\n')
             
         if len(class_lines) == 1:  # If no attributes were added, add a pass statement
-            class_lines.append(f"{indent}    pass\n")
+            class_lines.append(f"{indent}    pass" + "\n")
             
         return ''.join(class_lines)
     
@@ -92,9 +93,9 @@ class PackageMapper:
             if isinstance(value, dict):
                 class_name = key
                 bundle_map_lines.append(self._generate_class(class_name, value))
-                main_class_lines.append(f"    {class_name}=_{class_name}()\n")
+                main_class_lines.append(f"    {class_name}=_{class_name}()" + "\n")
             else:
-                main_class_lines.append(f'    {key}: str = "{value}"\n')
+                main_class_lines.append(f'    {key}: str = "{value}"' + "\n")
             
         main_class_lines.append("\n\njs_bundle = Bundle()")
 
@@ -103,7 +104,9 @@ class PackageMapper:
             f.write(bundle_map_content)
         print(f"Python mapping written to {output_py}")
 
-    def generate_source_map(self, root_path: str = 'node_modules', output_json: Optional[str] = None, output_py: Optional[str] = None, include_file_types: List[str] = [".js", ".html", ".css", ".svg", ".webp", ".jpeg", ".jpg", ".png"], ignore_exists:bool=True):
+    def generate_source_map(self, root_path: str = 'node_modules', output_json: Optional[str] = None, output_py: Optional[str] = None, include_file_types: List[str]|None = None, ignore_exists:bool=True):
+        if include_file_types is None:
+            include_file_types = [".js", ".html", ".css", ".svg", ".webp", ".jpeg", ".jpg", ".png"]
         json_data = self._analyze_and_simplify_directory(root_path, include_file_types)
             
         # Generate default output paths if not provided
@@ -112,10 +115,10 @@ class PackageMapper:
             parent_dir = os.path.dirname(root_path)
                 
             base_name = self._replace_strings(base_name)
-            if output_json is None:
-                output_json = os.path.join(parent_dir, f"{base_name}.json")
-            if output_py is None:
-                output_py = os.path.join(parent_dir, f"{base_name}.py")
+        if output_json is None:
+            output_json = os.path.join(parent_dir, f"{base_name}.json")
+        if output_py is None:
+            output_py = os.path.join(parent_dir, f"{base_name}.py")
             
         # Check if files already exist
         if not ignore_exists:
@@ -148,13 +151,19 @@ class NodeManager():
         if system == "windows":
             print("Please download and install Node.js from https://nodejs.org/")
         elif system == "darwin":
-            print("To install Node.js on macOS, we recommend using Homebrew:")
-            print("1. Install Homebrew: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"")
-            print("2. Install Node.js: brew install node")
+            print(
+                "To install Node.js on macOS, we recommend using Homebrew:",
+                "1. Install Homebrew: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
+                "2. Install Node.js: brew install node",
+                sep="\n"
+            )
         elif system == "linux":
-            print("To install Node.js on Linux, use your distribution's package manager.")
-            print("For Ubuntu/Debian: sudo apt update && sudo apt install nodejs npm")
-            print("For Fedora: sudo dnf install nodejs")
+            print(
+                "To install Node.js on Linux, use your distribution's package manager.",
+                "For Ubuntu/Debian: sudo apt update && sudo apt install nodejs npm",
+                "For Fedora: sudo dnf install nodejs",
+                sep="\n"
+            )
         else:
             print("Please install Node.js manually from https://nodejs.org/")
         sys.exit(1)
@@ -208,7 +217,7 @@ class NodeManager():
 module.exports = {{
   content: [
     // Library files
-{''.join([f"    '{f}',\n" for f in library_files])}
+{''.join([(f"    '{f}'," + "\n") for f in library_files])}
     // User project files
     '../src/**/*.{{html,py}}'
   ],
