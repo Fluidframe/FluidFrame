@@ -128,7 +128,7 @@ Before you begin, ensure you have the following installed on your system:
 ### contributing
   1. Clone the repository:
   ```bash
-  git clone https://github.com/AswanthManoj/fluidframe.git
+  git clone https://github.com/Fluidframe/FluidFrame.git
   cd fluidframe
   ```
     
@@ -142,12 +142,12 @@ Before you begin, ensure you have the following installed on your system:
   Install FluidFrame directly from the repository:
   - Using pip:
   ```bash
-  pip install git+https://github.com/AswanthManoj/fluidframe.git
+  pip install git+https://github.com/Fluidframe/FluidFrame.git
   ```
        
   - Using Poetry:
   ```bash
-  poetry add git+https://github.com/AswanthManoj/fluidframe.git
+  poetry add git+https://github.com/Fluidframe/FluidFrame.git
   ```
 
 **Note:** This step compiles the Cython modules and places the resulting binary files in the appropriate directories. (Currently only supports Linux)
