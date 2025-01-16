@@ -326,6 +326,7 @@ app.set_entry_page(
     )
 )
 
+app.mount_fluidbuild("./fluidbuild")
 app.build()
 
 if __name__ == '__main__':
@@ -386,6 +387,7 @@ app.set_entry_page(
     )
 )
 
+app.mount_fluidbuild("./fluidbuild")
 app.build()
 
 if __name__ == '__main__':
